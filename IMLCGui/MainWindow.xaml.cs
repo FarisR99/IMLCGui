@@ -75,7 +75,7 @@ namespace IMLCGui
             if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
             {
                 MessageBox.Show(
-                    $"WARNING: You are not running this application as an administrator. {Environment.NewLine}It is strongly recommended to run this program as an administrator to obtain accurate data.",
+                    $"WARNING: You are not running this application as an administrator.{Environment.NewLine}It is strongly recommended to run this program as an administrator to obtain accurate data.",
                     "Warning"
                 );
             }
@@ -108,6 +108,16 @@ namespace IMLCGui
             catch
             {
             }
+        }
+
+        private void BtnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(
+                "Intel Memory Latency Checker GUI" + Environment.NewLine +
+                Environment.NewLine +
+                "A GUI wrapper for Intel MLC made in C# by KingFaris10.",
+                "Help"
+            );
         }
 
         // Core

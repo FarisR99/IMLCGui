@@ -10,6 +10,15 @@
         Width="800" Height="450"
         MinWidth="420" MinHeight="360"
         Closing="MetroWindow_Closing">
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button 
+                Content="?"
+                Name="BtnHelp"
+                Click="BtnHelp_Click" />
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+
     <Grid>
         <Controls:MetroTabControl Name="TabCtrlBenchmark">
             <!-- Tab: Quick -->
@@ -70,7 +79,8 @@
                     <Button VerticalAlignment="Bottom" Margin="2"
                             Name="BtnQuickRun"
                             Click="BtnQuickRun_Click"
-                            Content="Run" />
+                            Content="Run"
+                            ToolTip="Run Intel MLC with &quot;--bandwidth_matrix&quot; and &quot;--latency_matrix&quot;" />
                 </StackPanel>
             </Controls:MetroTabItem>
 
@@ -188,12 +198,13 @@
                         Content="Peak Injection"
                         Padding="4,4,0,4"
                         Name="ChckBoxBandwidthPeak"
-                        ToolTip="Runs --peak_injection_bandwidth&#x0a;This will take less time to run."/>
+                        ToolTip="Runs &quot;--peak_injection_bandwidth&quot;&#x0a;This will take less time to run."/>
 
                     <Button VerticalAlignment="Bottom" Margin="2"
                             Name="BtnBandwidthRun"
                             Content="Run"
-                            Click="BtnBandwidthRun_Click" />
+                            Click="BtnBandwidthRun_Click"
+                            ToolTip="Run Intel MLC with &quot;--max_bandwidth&quot;" />
                 </StackPanel>
             </Controls:MetroTabItem>
 
@@ -279,7 +290,8 @@
                             Margin="2, 4, 4, 4"
                             Name="BtnLatencyRun"
                             Click="BtnLatencyRun_Click"
-                            Content="Run" />
+                            Content="Run"
+                            ToolTip="Run Intel MLC with &quot;--loaded_latency&quot;" />
                     </Grid>
                 </Grid>
             </Controls:MetroTabItem>
@@ -348,7 +360,8 @@
                             Margin="2"
                             Name="BtnCacheRun"
                             Content="Run"
-                            Click="BtnCacheRun_Click" />
+                            Click="BtnCacheRun_Click"
+                            ToolTip="Run Intel MLC with &quot;--c2c_latency&quot;" />
                 </StackPanel>
             </Controls:MetroTabItem>
 
@@ -402,7 +415,8 @@
                                 <Button
                                     Name="BtnConfigureDownload"
                                     Content="Download"
-                                    Click="BtnConfigureDownload_Click" />
+                                    Click="BtnConfigureDownload_Click"
+                                    ToolTip="Download mlc.exe to the current directory" />
                             </Border>
                             <Border 
                                     Grid.Row="0" Grid.Column="1"
@@ -410,7 +424,8 @@
                                 <Button
                                     Name="BtnConfigureBrowse"
                                     Content="Browse"
-                                    Click="BtnConfigureBrowse_Click" />
+                                    Click="BtnConfigureBrowse_Click"
+                                    ToolTip="Locate mlc.exe" />
                             </Border>
                         </Grid>
                     </Border>
@@ -426,7 +441,8 @@
                             TextWrapping="Wrap"
                             AcceptsReturn="True"
                             IsReadOnly="True"
-                            Name="TxtConfigureLog" />
+                            Name="TxtConfigureLog"
+                            ToolTip="Download output log" />
                     </Border>
                 </Grid>
             </Controls:MetroTabItem>
