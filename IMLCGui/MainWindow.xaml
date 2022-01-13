@@ -1,0 +1,435 @@
+﻿<Controls:MetroWindow x:Class="IMLCGui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:local="clr-namespace:IMLCGui"
+        mc:Ignorable="d"
+        Title="Intel MLC GUI" 
+        Width="800" Height="450"
+        MinWidth="420" MinHeight="360"
+        Closing="MetroWindow_Closing">
+    <Grid>
+        <Controls:MetroTabControl Name="TabCtrlBenchmark">
+            <!-- Tab: Quick -->
+            <Controls:MetroTabItem Header="Quick">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Grid
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                        <Grid.Resources >
+                            <Style TargetType="Border">
+                                <Setter Property="Padding" Value="2" />
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <Label 
+                            Width="120"
+                            Height="30"  
+                            Grid.Row="0" Grid.Column="0"
+                            HorizontalContentAlignment="Center"
+                            Content="Bandwidth (MB/s)" />
+
+                        <Border Grid.Row="1" Grid.Column="0">
+                            <TextBox
+                                Width="120"
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxQuickBandwidth"
+                                IsReadOnly="False" />
+                        </Border>
+
+                        <Label 
+                            Width="120" 
+                            Height="30" 
+                            Grid.Row="0" Grid.Column="1"
+                            HorizontalContentAlignment="Center"
+                            Content="Latency (ns)" />
+
+                        <Border Grid.Row="1" Grid.Column="1">
+                            <TextBox
+                                Width="120"
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxQuickLatency"
+                                IsReadOnly="True" />
+                        </Border>
+                    </Grid>
+
+                    <Button VerticalAlignment="Bottom" Margin="2"
+                            Name="BtnQuickRun"
+                            Click="BtnQuickRun_Click"
+                            Content="Run" />
+                </StackPanel>
+            </Controls:MetroTabItem>
+
+            <!-- Tab: Bandwidth -->
+            <Controls:MetroTabItem Header="Bandwidth">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Grid
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                        <Grid.Resources >
+                            <Style TargetType="Border">
+                                <Setter Property="Padding" Value="2" />
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <!-- Column Header -->
+                        <Label
+                            Height="30"
+                            Grid.Row="0" Grid.Column="1"
+                            HorizontalContentAlignment="Center"
+                            Content="Bandwidth (MB/s)" />
+
+                        <!-- Row: ALL Reads -->
+                        <Label
+                            Height="30"  
+                            Grid.Row="1" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="ALL Reads" />
+
+                        <Border Grid.Row="1" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxBandwidthAll"
+                                IsReadOnly="True" />
+                        </Border>
+
+                        <!-- Row: 3:1 Reads-Writes -->
+                        <Label 
+                            Height="30" 
+                            Grid.Row="2" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="3:1 Reads-Writes" />
+
+                        <Border Grid.Row="2" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxBandwidth31"
+                                IsReadOnly="True" />
+                        </Border>
+
+                        <!-- Row: 2:1 Reads-Writes -->
+                        <Label 
+                            Height="30" 
+                            Grid.Row="3" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="2:1 Reads-Writes" />
+
+                        <Border Grid.Row="3" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxBandwidth21"
+                                IsReadOnly="True" />
+                        </Border>
+
+                        <!-- Row: 1:1 Reads-Writes -->
+                        <Label 
+                            Height="30" 
+                            Grid.Row="4" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="1:1 Reads-Writes" />
+
+                        <Border Grid.Row="4" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxBandwidth11"
+                                IsReadOnly="True" />
+                        </Border>
+
+                        <!-- Row: Stream-triad like -->
+                        <Label 
+                            Height="30" 
+                            Grid.Row="5" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="Stream-triad like" />
+
+                        <Border Grid.Row="5" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxBandwidthStreamTriad"
+                                IsReadOnly="True" />
+                        </Border>
+                    </Grid>
+
+                    <CheckBox
+                        HorizontalAlignment="Center"
+                        Content="Peak Injection"
+                        Padding="4,4,0,4"
+                        Name="ChckBoxBandwidthPeak"
+                        ToolTip="Runs --peak_injection_bandwidth&#x0a;This will take less time to run."/>
+
+                    <Button VerticalAlignment="Bottom" Margin="2"
+                            Name="BtnBandwidthRun"
+                            Content="Run"
+                            Click="BtnBandwidthRun_Click" />
+                </StackPanel>
+            </Controls:MetroTabItem>
+
+            <!-- Tab: Latency -->
+            <Controls:MetroTabItem Header="Latency">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="40" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Table -->
+                    <ScrollViewer Grid.Row="0" Grid.Column="0"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalAlignment="Stretch"
+                                  HorizontalAlignment="Stretch">
+                        <Grid ShowGridLines="True" 
+                              VerticalAlignment="Top"
+                              Name="GridLatency">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Column Headers Row -->
+                            <Grid ShowGridLines="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0" 
+                                   Grid.Column="0" 
+                                   VerticalAlignment="Center"
+                                   Height="30"
+                                   Content="Inject Delay"
+                                   FontWeight="Bold" />
+                                <Label Grid.Row="0" 
+                                   Grid.Column="1" 
+                                   VerticalAlignment="Center"
+                                   Height="30"
+                                   Content="Latency (ns)"
+                                   FontWeight="Bold" />
+                                <Label Grid.Row="0" 
+                                   Grid.Column="2" 
+                                   VerticalAlignment="Center"
+                                   Height="30"
+                                   Content="Bandwidth (MB/s)"
+                                   FontWeight="Bold" />
+                            </Grid>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <!-- Bottom Bar -->
+                    <Grid Grid.Row="1" Grid.Column="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80*" />
+                            <ColumnDefinition Width="20*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <Controls:MetroProgressBar
+                            Grid.Row="0" Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            Margin="4, 4, 2, 4"
+                            Background="Gray"
+                            Name="ProgressLatency" />
+                        <Button 
+                            Grid.Row="0" Grid.Column="2"
+                            HorizontalAlignment="Stretch"
+                            Margin="2, 4, 4, 4"
+                            Name="BtnLatencyRun"
+                            Click="BtnLatencyRun_Click"
+                            Content="Run" />
+                    </Grid>
+                </Grid>
+            </Controls:MetroTabItem>
+
+            <!-- Tab: Cache -->
+            <Controls:MetroTabItem Header="Cache">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <Grid
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="180">
+                        <Grid.Resources >
+                            <Style TargetType="Border" >
+                                <Setter Property="Padding" Value="2" />
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <Label
+                            Height="30"
+                            Grid.Row="0" Grid.Column="1"
+                            HorizontalContentAlignment="Center"
+                            Content="Latency (ns)" />
+
+                        <Label
+                            Height="30"
+                            Grid.Row="1" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="L2->L2 HIT" />
+
+                        <Border Grid.Row="1" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxL2Hit"
+                                IsReadOnly="True" />
+                        </Border>
+
+                        <Label 
+                            Height="30" 
+                            Grid.Row="2" Grid.Column="0"
+                            HorizontalContentAlignment="Right"
+                            Content="L2->L2 HITM" />
+
+                        <Border Grid.Row="2" Grid.Column="1">
+                            <TextBox
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                Name="TxtBoxL2HitM"
+                                IsReadOnly="True" />
+                        </Border>
+                    </Grid>
+
+                    <Button VerticalAlignment="Bottom"
+                            Margin="2"
+                            Name="BtnCacheRun"
+                            Content="Run"
+                            Click="BtnCacheRun_Click" />
+                </StackPanel>
+            </Controls:MetroTabItem>
+
+            <!-- Tab: Configure -->
+            <Controls:MetroTabItem Header="Configure">
+                <Grid
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="420" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition MinHeight="26" />
+                        <RowDefinition MinHeight="30" />
+                        <RowDefinition Height="160" MinHeight="40" />
+                    </Grid.RowDefinitions>
+
+                    <Grid
+                        Grid.Row="0" Grid.Column="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <Label
+                            Grid.Row="0" Grid.Column="0"
+                            Content="MLC Path:" />
+                        <TextBox
+                            Grid.Row="0" Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Name="TxtConfigurePath"
+                            KeyUp="TxtConfigurePath_KeyUp" />
+                    </Grid>
+
+                    <Border
+                        Grid.Row="1" Grid.Column="0"
+                        Padding="0,4,0,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50*" />
+                                <ColumnDefinition Width="50*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30" />
+                            </Grid.RowDefinitions>
+                            <Border 
+                                    Grid.Row="0" Grid.Column="0"
+                                    Padding="4,0,4,0">
+                                <Button
+                                    Name="BtnConfigureDownload"
+                                    Content="Download"
+                                    Click="BtnConfigureDownload_Click" />
+                            </Border>
+                            <Border 
+                                    Grid.Row="0" Grid.Column="1"
+                                    Padding="4,0,4,0">
+                                <Button
+                                    Name="BtnConfigureBrowse"
+                                    Content="Browse"
+                                    Click="BtnConfigureBrowse_Click" />
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border
+                        Grid.Row="2" Grid.Column="0"
+                        BorderThickness="1" BorderBrush="Black">
+                        <TextBox
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            TextWrapping="Wrap"
+                            AcceptsReturn="True"
+                            IsReadOnly="True"
+                            Name="TxtConfigureLog" />
+                    </Border>
+                </Grid>
+            </Controls:MetroTabItem>
+        </Controls:MetroTabControl>
+    </Grid>
+</Controls:MetroWindow>
