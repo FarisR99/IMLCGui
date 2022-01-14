@@ -67,8 +67,6 @@ namespace IMLCGui
 
             if (System.IO.File.Exists(filename))
                 this.LoadFromFile(filename);
-            else
-                System.IO.File.Create(filename).Close();
         }
 
         private void LoadFromFile(string file)
