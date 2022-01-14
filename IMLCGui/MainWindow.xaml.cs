@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 
 namespace IMLCGui
@@ -74,10 +75,7 @@ namespace IMLCGui
 
             if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
             {
-                MessageBox.Show(
-                    $"WARNING: You are not running this application as an administrator.{Environment.NewLine}It is strongly recommended to run this program as an administrator to obtain accurate data.",
-                    "Warning"
-                );
+                this.ShowMessageAsync("Warning", $"You are not running this application as an administrator.{Environment.NewLine}It is strongly recommended to run this program as an administrator to obtain accurate data.");
             }
         }
 
@@ -112,11 +110,10 @@ namespace IMLCGui
 
         private void BtnHelp_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
+            this.ShowMessageAsync("Information",
                 "Intel Memory Latency Checker GUI" + Environment.NewLine +
                 Environment.NewLine +
-                "A GUI wrapper for Intel MLC made in C# by KingFaris10.",
-                "Help"
+                "A GUI wrapper for Intel MLC made in C# by KingFaris10."
             );
         }
 
@@ -277,7 +274,7 @@ namespace IMLCGui
             string validationResult = ValidateMLC();
             if (validationResult != null)
             {
-                MessageBox.Show(validationResult, "Error");
+                this.ShowMessageAsync("Error", validationResult);
                 return;
             }
 
@@ -412,7 +409,7 @@ namespace IMLCGui
             string validationResult = ValidateMLC();
             if (validationResult != null)
             {
-                MessageBox.Show(validationResult, "Error");
+                this.ShowMessageAsync("Error", validationResult);
                 return;
             }
 
@@ -560,7 +557,7 @@ namespace IMLCGui
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    MessageBox.Show("Failed to fetch bandwidth data from Intel MLC. Please check the logs file for any errors.", "Error");
+                    this.ShowMessageAsync("Error", "Failed to fetch bandwidth data from Intel MLC. Please check the logs file for any errors.");
                 }));
                 return true;
             }
@@ -578,7 +575,7 @@ namespace IMLCGui
             string validationResult = ValidateMLC();
             if (validationResult != null)
             {
-                MessageBox.Show(validationResult, "Error");
+                this.ShowMessageAsync("Error", validationResult);
                 return;
             }
 
@@ -713,7 +710,7 @@ namespace IMLCGui
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    MessageBox.Show("Failed to fetch latency data from Intel MLC. Please check the logs file for any errors.", "Error");
+                    this.ShowMessageAsync("Error", "Failed to fetch latency data from Intel MLC. Please check the logs file for any errors.");
                 }));
                 return true;
             }
@@ -731,7 +728,7 @@ namespace IMLCGui
             string validationResult = ValidateMLC();
             if (validationResult != null)
             {
-                MessageBox.Show(validationResult, "Error");
+                this.ShowMessageAsync("Error", validationResult);
                 return;
             }
 
@@ -855,7 +852,7 @@ namespace IMLCGui
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    MessageBox.Show("Failed to fetch cache data from Intel MLC. Please check the logs file for any errors.", "Error");
+                    this.ShowMessageAsync("Error", "Failed to fetch cache data from Intel MLC. Please check the logs file for any errors.");
                 }));
                 return true;
             }
@@ -901,7 +898,7 @@ namespace IMLCGui
                 {
                     if (this.mlcProcessId != -1)
                     {
-                        MessageBox.Show("Cannot modify MLC path whilst MLC is running.", "Error");
+                        this.ShowMessageAsync("Cannot modify MLC path whilst MLC is running.", "Error");
                         return;
                     }
                 }
@@ -1149,7 +1146,7 @@ namespace IMLCGui
             {
                 if (this.mlcProcessId != -1)
                 {
-                    MessageBox.Show("Cannot modify MLC path whilst MLC is running.", "Error");
+                    this.ShowMessageAsync("Error", "Cannot modify MLC path whilst MLC is running.");
                     return;
                 }
             }
@@ -1158,7 +1155,7 @@ namespace IMLCGui
             {
                 if (!openFileDialog.CheckFileExists)
                 {
-                    MessageBox.Show("Please select a valid exe.", "Error");
+                    this.ShowMessageAsync("Error", "Please select a valid exe.");
                     return;
                 }
                 this.mlcPath = openFileDialog.FileName;
@@ -1184,7 +1181,7 @@ namespace IMLCGui
                 {
                     if (this.mlcProcessId != -1)
                     {
-                        MessageBox.Show("Cannot modify MLC path whilst MLC is running.", "Error");
+                        this.ShowMessageAsync("Error", "Cannot modify MLC path whilst MLC is running.");
                         return;
                     }
                 }
