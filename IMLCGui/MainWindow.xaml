@@ -56,7 +56,7 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxQuickBandwidth"
-                                IsReadOnly="False" />
+                                IsReadOnly="True" />
                         </Border>
 
                         <Label 
