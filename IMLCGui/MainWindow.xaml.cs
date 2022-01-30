@@ -260,6 +260,7 @@ namespace IMLCGui
                     else
                     {
                         this._logger.Log(LogLevel.WARN, "Found unknown output line");
+                        this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                     }
                     return false;
                 }
@@ -344,6 +345,7 @@ namespace IMLCGui
                         if (!double.TryParse(bandwidth, out bandwidthDouble))
                         {
                             this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                            this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                             return false;
                         }
                         int finalCurrRow = currRow;
@@ -384,6 +386,7 @@ namespace IMLCGui
                     else
                     {
                         this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                        this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                         return false;
                     }
                     currRow++;
@@ -509,6 +512,7 @@ namespace IMLCGui
                     else
                     {
                         this._logger.Log(LogLevel.WARN, "Found unknown output line");
+                        this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                         return false;
                     }
                     currRow++;
@@ -624,6 +628,7 @@ namespace IMLCGui
                     else
                     {
                         this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                        this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                         return false;
                     }
                     currRow++;
@@ -687,7 +692,7 @@ namespace IMLCGui
                 {
                     if (this._mlcProcess.ProcessId != -1)
                     {
-                        this.ShowMessageAsync("Cannot modify MLC path whilst MLC is running.", "Error");
+                        this.ShowMessageAsync("Error", "Cannot modify MLC path whilst MLC is running.");
                         return;
                     }
                 }
