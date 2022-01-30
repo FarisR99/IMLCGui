@@ -41,37 +41,20 @@ namespace IMLCGui
             "20000",
         };
 
-        private Logger logger;
-        private CustomConfig config;
-
-        private string mlcPath = "";
-
-        private CancellationTokenSource mlcCancellationTokenSource;
-        private object mlcProcessLock = new object();
-        private int mlcProcessId = -1;
+        private Logger _logger;
+        private CustomConfig _config;
+        private MLCProcess _mlcProcess;
 
         public MainWindow()
         {
-            this.logger = new Logger("log.txt");
+            this._logger = new Logger("imlcgui.log");
 
             InitializeComponent();
-
-            for (int i = 0; i < INJECT_DELAYS.Length; i++)
-            {
-                LatencyRow RowLatency = new LatencyRow();
-                RowLatency.ShowGridLines = true;
-                RowLatency.InjectDelay = INJECT_DELAYS[i];
-
-                RowDefinition RowDef = new RowDefinition();
-                RowDef.Height = GridLength.Auto;
-                this.GridLatency.RowDefinitions.Add(RowDef);
-
-                Grid.SetRow(RowLatency, i + 1);
-                Grid.SetColumn(RowLatency, 0);
-                this.GridLatency.Children.Add(RowLatency);
-            }
+            FillLatencyRows();
 
             this.LoadConfiguration();
+            this._mlcProcess = new MLCProcess(this._logger, this._config.Get("mlcPath", ""));
+            this.TxtConfigurePath.Text = this._mlcProcess.Path;
 
             if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
             {
@@ -79,32 +62,38 @@ namespace IMLCGui
             }
         }
 
+        private void FillLatencyRows()
+        {
+            for (int i = 0; i < INJECT_DELAYS.Length; i++)
+            {
+                LatencyRow rowLatency = new LatencyRow();
+                rowLatency.ShowGridLines = true;
+                rowLatency.InjectDelay = INJECT_DELAYS[i];
+
+                RowDefinition rowDef = new RowDefinition();
+                rowDef.Height = GridLength.Auto;
+                this.GridLatency.RowDefinitions.Add(rowDef);
+
+                Grid.SetRow(rowLatency, i + 1);
+                Grid.SetColumn(rowLatency, 0);
+                this.GridLatency.Children.Add(rowLatency);
+            }
+        }
+
         private void LoadConfiguration()
         {
-            this.config = new CustomConfig("imlcgui.properties");
-            this.mlcPath = this.config.Get("mlcPath", "");
-            this.TxtConfigurePath.Text = this.mlcPath;
+            this._config = new CustomConfig("imlcgui.properties");
         }
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             try
             {
-                StopMLC();
+                this._mlcProcess.Stop();
             }
             catch (Exception ex)
             {
-                this.logger.Error("Failed to stop MLC on program exit:", ex);
-            }
-            try
-            {
-                if (this.mlcCancellationTokenSource != null)
-                {
-                    this.mlcDownloadCancellationSource.Cancel();
-                }
-            }
-            catch
-            {
+                this._logger.Error("Failed to stop MLC on program exit:", ex);
             }
         }
 
@@ -117,157 +106,40 @@ namespace IMLCGui
             );
         }
 
-        // Core
-
-        public delegate void Runnable();
-
         // MLC Handling
 
         private string ValidateMLC()
         {
-            if (this.mlcPath.Trim().Length == 0)
+            if (this._mlcProcess.Path.Trim().Length == 0)
             {
-                this.mlcPath = FileUtils.GetCurrentPath("mlc.exe");
-                if (File.Exists(this.mlcPath))
+                this._mlcProcess.Path = FileUtils.GetCurrentPath("mlc.exe");
+                if (File.Exists(this._mlcProcess.Path))
                 {
                     try
                     {
-                        this.logger.Log($"Found mlc.exe at: {this.mlcPath}");
-                        this.config.Set("mlcPath", this.mlcPath);
-                        this.config.Save();
+                        this._logger.Log($"Found mlc.exe at: {this._mlcProcess.Path}");
+                        this._config.Set("mlcPath", this._mlcProcess.Path);
+                        this._config.Save();
+
+                        this.TxtConfigurePath.Text = this._mlcProcess.Path;
                     }
                     catch (Exception ex)
                     {
-                        this.logger.Error("Failed to save mlcPath to config:", ex);
+                        this._logger.Error("Failed to save mlcPath to config:", ex);
                     }
                     return null;
                 }
             }
-            if (!File.Exists(this.mlcPath))
+            if (!File.Exists(this._mlcProcess.Path))
             {
-                return $"Failed to find MLC at \"{this.mlcPath}\". Please visit the Configure tab.";
+                return $"Failed to find MLC at \"{this._mlcProcess.Path}\". Please visit the Configure tab.";
             }
             return null;
         }
 
-        private bool StopMLC()
+        private void HandleMLCButton(Action resetUI, string logMessage, Action taskAction)
         {
-            bool retVal = false;
-            if (this.mlcCancellationTokenSource != null && !this.mlcCancellationTokenSource.IsCancellationRequested)
-            {
-                this.mlcCancellationTokenSource.Cancel();
-                this.mlcCancellationTokenSource = null;
-                retVal = true;
-                try
-                {
-                    Thread.Sleep(250);
-                }
-                catch (Exception)
-                {
-                }
-            }
-            lock (this.mlcProcessLock)
-            {
-                if (this.mlcProcessId != -1)
-                {
-                    try
-                    {
-                        this.logger.Log("User requested cancellation, killing MLC...");
-                        Process runningProcess = Process.GetProcessById(this.mlcProcessId);
-                        if (runningProcess != null && !runningProcess.HasExited)
-                        {
-                            if (!runningProcess.HasExited)
-                            {
-                                string processName = runningProcess.ProcessName;
-                                runningProcess.Kill();
-                                runningProcess.WaitForExit();
-                                this.logger.Log($"Killed process: {processName}");
-                                this.mlcProcessId = -1;
-                            }
-                        }
-                        else
-                        {
-                            this.logger.Log("Killed MLC.");
-                            this.mlcProcessId = -1;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.Error("Failed to kill MLC process:", ex);
-                    }
-                    retVal = true;
-                }
-            }
-            return retVal;
-        }
-
-        private void KillMLC(Process process)
-        {
-            lock (this.mlcProcessLock)
-            {
-                if (process == null)
-                {
-                    if (this.mlcProcessId == -1)
-                    {
-                        return;
-                    }
-                    process = Process.GetProcessById(this.mlcProcessId);
-                }
-                if (!process.HasExited)
-                {
-                    try
-                    {
-                        process.Kill();
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.Error($"Failed to kill {process.ProcessName}", ex);
-                    }
-                }
-                this.mlcProcessId = -1;
-            }
-        }
-
-        private delegate bool ProcessMLCOutputLine(string line);
-
-        private void ConsumeMLCOutput(Process process, CancellationToken cancelToken, Predicate<string> shouldStartProcessing, ProcessMLCOutputLine processLine)
-        {
-            bool shouldProcessLine = false;
-            while (!process.StandardOutput.EndOfStream)
-            {
-                cancelToken.ThrowIfCancellationRequested();
-                string line;
-                try
-                {
-                    line = process.StandardOutput.ReadLine();
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine(ex.Message);
-                    return;
-                }
-                cancelToken.ThrowIfCancellationRequested();
-                this.logger.Log(LogLevel.PROCESS, line);
-                if (shouldProcessLine)
-                {
-                    if (!processLine(line))
-                    {
-                        break;
-                    }
-                }
-                else if (shouldStartProcessing(line))
-                {
-                    shouldProcessLine = true;
-                }
-            }
-            return;
-        }
-
-        // Run Quick Run
-
-        private void BtnQuickRun_Click(object sender, RoutedEventArgs e)
-        {
-            if (StopMLC())
+            if (this._mlcProcess.Stop())
             {
                 return;
             }
@@ -278,32 +150,50 @@ namespace IMLCGui
                 return;
             }
 
-            this.TxtBoxQuickBandwidth.Text = "";
-            this.TxtBoxQuickLatency.Text = "";
-            this.BtnQuickRun.Content = "Cancel";
+            if (resetUI != null)
+            {
+                resetUI();
+            }
 
-            this.logger.Log("Running Intel MLC quick test");
+            if (logMessage != null)
+            {
+                this._logger.Log(logMessage);
+            }
 
-            this.mlcCancellationTokenSource = new CancellationTokenSource();
-            Task.Run(() =>
+            this._mlcProcess.CancellationTokenSource = new CancellationTokenSource();
+            Task.Run(taskAction, this._mlcProcess.CancellationTokenSource.Token);
+        }
+
+        // Run Quick Run
+
+        private void BtnQuickRun_Click(object sender, RoutedEventArgs e)
+        {
+            this.HandleMLCButton(() =>
+            {
+                this.TxtBoxQuickBandwidth.Text = "";
+                this.TxtBoxQuickLatency.Text = "";
+                this.BtnQuickRun.Content = "Cancel";
+            },
+            "Running Intel MLC quick test",
+            () =>
             {
                 try
                 {
-                    if (!RunMLCQuickProcess(this.mlcCancellationTokenSource.Token, "bandwidth"))
+                    if (!RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, "bandwidth"))
                     {
                         return;
                     }
-                    RunMLCQuickProcess(this.mlcCancellationTokenSource.Token, "latency");
+                    RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, "latency");
                 }
                 catch (OperationCanceledException)
                 {
-                    this.KillMLC(null);
+                    this._mlcProcess.Kill();
                 }
                 finally
                 {
                     this.ResetQuickRunButton();
                 }
-            }, this.mlcCancellationTokenSource.Token);
+            });
         }
 
         private void ResetQuickRunButton()
@@ -330,34 +220,16 @@ namespace IMLCGui
                 Console.Error.WriteLine($"Unknown run mode for quick test: {mode}");
                 return true;
             }
-            Process process = new Process
+            Process process = this._mlcProcess.StartProcess(mlcArguments);
+            if (process == null)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = this.mlcPath,
-                    Arguments = mlcArguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                },
-                EnableRaisingEvents = true
-            };
-            lock (this.mlcProcessLock)
-            {
-                if (this.mlcProcessId != -1)
-                {
-                    return false;
-                }
-                this.logger.Log($"Running \"mlc {mlcArguments}\"");
-                process.Start();
-                this.mlcProcessId = process.Id;
+                return false;
             }
             cancelToken.ThrowIfCancellationRequested();
 
-            ConsumeMLCOutput(process, cancelToken,
-                delegate (string line) { return line.StartsWith("Numa node"); },
-                delegate (string line)
+            this._mlcProcess.ConsumeOutput(process, cancelToken,
+                (string line) => line.StartsWith("Numa node"),
+                (string line) =>
                 {
                     string[] lineSplit = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
                     if (lineSplit.Length == 2)
@@ -378,7 +250,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this.logger.Log(LogLevel.WARN,
+                                this._logger.Log(LogLevel.WARN,
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -387,14 +259,14 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this.logger.Log(LogLevel.WARN, "Found unknown output line");
+                        this._logger.Log(LogLevel.WARN, "Found unknown output line");
                     }
                     return false;
                 }
             );
 
             cancelToken.ThrowIfCancellationRequested();
-            this.KillMLC(process);
+            this._mlcProcess.Kill(process);
             return true;
         }
 
@@ -402,43 +274,32 @@ namespace IMLCGui
 
         private void BtnBandwidthRun_Click(object sender, RoutedEventArgs e)
         {
-            if (StopMLC())
-            {
-                return;
-            }
-            string validationResult = ValidateMLC();
-            if (validationResult != null)
-            {
-                this.ShowMessageAsync("Error", validationResult);
-                return;
-            }
-
-            this.TxtBoxBandwidthAll.Text = "";
-            this.TxtBoxBandwidth31.Text = "";
-            this.TxtBoxBandwidth21.Text = "";
-            this.TxtBoxBandwidth11.Text = "";
-            this.TxtBoxBandwidthStreamTriad.Text = "";
-            this.BtnBandwidthRun.Content = "Cancel";
             bool peakInjection = this.ChckBoxBandwidthPeak.IsChecked ?? false;
-
-            this.logger.Log("Running Intel MLC bandwidth test");
-
-            this.mlcCancellationTokenSource = new CancellationTokenSource();
-            Task.Run(() =>
+            this.HandleMLCButton(() =>
+            {
+                this.TxtBoxBandwidthAll.Text = "";
+                this.TxtBoxBandwidth31.Text = "";
+                this.TxtBoxBandwidth21.Text = "";
+                this.TxtBoxBandwidth11.Text = "";
+                this.TxtBoxBandwidthStreamTriad.Text = "";
+                this.BtnBandwidthRun.Content = "Cancel";
+            },
+            "Running Intel MLC bandwidth test",
+            () =>
             {
                 try
                 {
-                    StartMLCBandwidth(this.mlcCancellationTokenSource.Token, peakInjection);
+                    StartMLCBandwidth(this._mlcProcess.CancellationTokenSource.Token, peakInjection);
                 }
                 catch (OperationCanceledException)
                 {
-                    this.KillMLC(null);
+                    this._mlcProcess.Kill();
                 }
                 finally
                 {
                     this.ResetBandwidthRunButton();
                 }
-            }, this.mlcCancellationTokenSource.Token);
+            });
         }
 
         private void ResetBandwidthRunButton()
@@ -452,33 +313,16 @@ namespace IMLCGui
         private bool StartMLCBandwidth(CancellationToken cancelToken, bool peakInjection)
         {
             string mlcArguments = peakInjection ? "--peak_injection_bandwidth" : "--max_bandwidth";
-            Process process = new Process
+            Process process = this._mlcProcess.StartProcess(mlcArguments);
+            if (process == null)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = this.mlcPath,
-                    Arguments = mlcArguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true,
-                },
-                EnableRaisingEvents = true
-            };
-            lock (this.mlcProcessLock)
-            {
-                if (this.mlcProcessId != -1)
-                {
-                    return false;
-                }
-                this.logger.Log($"Running \"mlc {mlcArguments}\"");
-                process.Start();
-                this.mlcProcessId = process.Id;
+                return false;
             }
             cancelToken.ThrowIfCancellationRequested();
 
             int currRow = -1;
-            ConsumeMLCOutput(process, cancelToken,
-                delegate (string line)
+            this._mlcProcess.ConsumeOutput(process, cancelToken,
+                (string line) =>
                 {
                     if (line.StartsWith("Using traffic"))
                     {
@@ -490,7 +334,7 @@ namespace IMLCGui
                         return false;
                     }
                 },
-                delegate (string line)
+                (string line) =>
                 {
                     string[] lineSplit = line.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
                     if (lineSplit.Length > 1)
@@ -499,7 +343,7 @@ namespace IMLCGui
                         double bandwidthDouble = -1D;
                         if (!double.TryParse(bandwidth, out bandwidthDouble))
                         {
-                            this.logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                            this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
                             return false;
                         }
                         int finalCurrRow = currRow;
@@ -530,7 +374,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this.logger.Log(LogLevel.WARN,
+                                this._logger.Log(LogLevel.WARN,
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -539,7 +383,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this.logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                        this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
                         return false;
                     }
                     currRow++;
@@ -552,7 +396,7 @@ namespace IMLCGui
             );
 
             cancelToken.ThrowIfCancellationRequested();
-            this.KillMLC(process);
+            this._mlcProcess.Kill(process);
             if (currRow == -1)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
@@ -568,45 +412,34 @@ namespace IMLCGui
 
         private void BtnLatencyRun_Click(object sender, RoutedEventArgs e)
         {
-            if (StopMLC())
+            this.HandleMLCButton(() =>
             {
-                return;
-            }
-            string validationResult = ValidateMLC();
-            if (validationResult != null)
-            {
-                this.ShowMessageAsync("Error", validationResult);
-                return;
-            }
-
-            this.ProgressLatency.Value = 0;
-            for (int i = 0; i < INJECT_DELAYS.Length; i++)
-            {
-                LatencyRow RowLatency = (LatencyRow)this.GridLatency.Children[i + 1];
-                RowLatency.InjectDelay = INJECT_DELAYS[i];
-                RowLatency.Latency = "";
-                RowLatency.Bandwidth = "";
-            }
-            this.BtnLatencyRun.Content = "Cancel";
-
-            this.logger.Log("Running Intel MLC latency test");
-
-            this.mlcCancellationTokenSource = new CancellationTokenSource();
-            Task.Run(() =>
+                this.ProgressLatency.Value = 0;
+                for (int i = 0; i < INJECT_DELAYS.Length; i++)
+                {
+                    LatencyRow rowLatency = (LatencyRow)this.GridLatency.Children[i + 1];
+                    rowLatency.InjectDelay = INJECT_DELAYS[i];
+                    rowLatency.Latency = "";
+                    rowLatency.Bandwidth = "";
+                }
+                this.BtnLatencyRun.Content = "Cancel";
+            },
+            "Running Intel MLC latency test",
+            () =>
             {
                 try
                 {
-                    StartMLCLatency(this.mlcCancellationTokenSource.Token);
+                    StartMLCLatency(this._mlcProcess.CancellationTokenSource.Token);
                 }
                 catch (OperationCanceledException)
                 {
-                    this.KillMLC(null);
+                    this._mlcProcess.Kill();
                 }
                 finally
                 {
                     this.ResetLatencyRunButton();
                 }
-            }, this.mlcCancellationTokenSource.Token);
+            });
         }
 
         private void ResetLatencyRunButton()
@@ -619,33 +452,16 @@ namespace IMLCGui
 
         private bool StartMLCLatency(CancellationToken cancelToken)
         {
-            Process process = new Process
+            Process process = this._mlcProcess.StartProcess("--loaded_latency");
+            if (process == null)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = this.mlcPath,
-                    Arguments = "--loaded_latency",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true,
-                },
-                EnableRaisingEvents = true
-            };
-            lock (this.mlcProcessLock)
-            {
-                if (this.mlcProcessId != -1)
-                {
-                    return false;
-                }
-                this.logger.Log("Running \"mlc --loaded_latency\"");
-                process.Start();
-                this.mlcProcessId = process.Id;
+                return false;
             }
             cancelToken.ThrowIfCancellationRequested();
 
             int currRow = -1;
-            ConsumeMLCOutput(process, cancelToken,
-                delegate (string line)
+            this._mlcProcess.ConsumeOutput(process, cancelToken,
+                (string line) =>
                 {
                     if (line == "==========================")
                     {
@@ -657,7 +473,7 @@ namespace IMLCGui
                         return false;
                     }
                 },
-                delegate (string line)
+                (string line) =>
                 {
                     string[] lineSplit = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
                     if (lineSplit.Length == 3)
@@ -666,7 +482,7 @@ namespace IMLCGui
                         int injectDelayIndex = Array.IndexOf(INJECT_DELAYS, injectDelay);
                         if (injectDelayIndex == -1)
                         {
-                            this.logger.Log(LogLevel.WARN, $"thread={Thread.CurrentThread.Name}: Skipping unknown inject delay = {injectDelay}");
+                            this._logger.Log(LogLevel.WARN, $"thread={Thread.CurrentThread.Name}: Skipping unknown inject delay = {injectDelay}");
                             currRow++;
                             return true;
                         }
@@ -675,15 +491,15 @@ namespace IMLCGui
                         {
                             try
                             {
-                                LatencyRow RowLatency = (LatencyRow)this.GridLatency.Children[injectDelayIndex + 1];
-                                RowLatency.InjectDelay = lineSplit[0];
-                                RowLatency.Latency = lineSplit[1];
-                                RowLatency.Bandwidth = lineSplit[2];
+                                LatencyRow rowLatency = (LatencyRow)this.GridLatency.Children[injectDelayIndex + 1];
+                                rowLatency.InjectDelay = lineSplit[0];
+                                rowLatency.Latency = lineSplit[1];
+                                rowLatency.Bandwidth = lineSplit[2];
                                 this.ProgressLatency.Value = progressValue;
                             }
                             catch (Exception ex)
                             {
-                                this.logger.Log(LogLevel.WARN,
+                                this._logger.Log(LogLevel.WARN,
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -692,7 +508,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this.logger.Log(LogLevel.WARN, "Found unknown output line");
+                        this._logger.Log(LogLevel.WARN, "Found unknown output line");
                         return false;
                     }
                     currRow++;
@@ -705,7 +521,7 @@ namespace IMLCGui
             );
 
             cancelToken.ThrowIfCancellationRequested();
-            this.KillMLC(process);
+            this._mlcProcess.Kill(process);
             if (currRow == -1)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
@@ -721,39 +537,28 @@ namespace IMLCGui
 
         private void BtnCacheRun_Click(object sender, RoutedEventArgs e)
         {
-            if (StopMLC())
+            this.HandleMLCButton(() =>
             {
-                return;
-            }
-            string validationResult = ValidateMLC();
-            if (validationResult != null)
-            {
-                this.ShowMessageAsync("Error", validationResult);
-                return;
-            }
-
-            this.TxtBoxL2Hit.Text = "";
-            this.TxtBoxL2HitM.Text = "";
-            this.BtnCacheRun.Content = "Cancel";
-
-            this.logger.Log("Running Intel MLC cache test");
-
-            this.mlcCancellationTokenSource = new CancellationTokenSource();
-            Task.Run(() =>
+                this.TxtBoxL2Hit.Text = "";
+                this.TxtBoxL2HitM.Text = "";
+                this.BtnCacheRun.Content = "Cancel";
+            },
+            "Running Intel MLC cache test",
+            () =>
             {
                 try
                 {
-                    StartMLCCache(this.mlcCancellationTokenSource.Token);
+                    StartMLCCache(this._mlcProcess.CancellationTokenSource.Token);
                 }
                 catch (OperationCanceledException)
                 {
-                    this.KillMLC(null);
+                    this._mlcProcess.Kill();
                 }
                 finally
                 {
                     this.ResetCacheRunButton();
                 }
-            }, this.mlcCancellationTokenSource.Token);
+            });
         }
 
         private void ResetCacheRunButton()
@@ -763,35 +568,19 @@ namespace IMLCGui
                 this.BtnCacheRun.Content = "Run";
             });
         }
+
         private bool StartMLCCache(CancellationToken cancelToken)
         {
-            Process process = new Process
+            Process process = this._mlcProcess.StartProcess("--c2c_latency");
+            if (process == null)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = this.mlcPath,
-                    Arguments = "--c2c_latency",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true,
-                },
-                EnableRaisingEvents = true
-            };
-            lock (this.mlcProcessLock)
-            {
-                if (this.mlcProcessId != -1)
-                {
-                    return false;
-                }
-                this.logger.Log("Running \"mlc --c2c_latency\"");
-                process.Start();
-                this.mlcProcessId = process.Id;
+                return false;
             }
             cancelToken.ThrowIfCancellationRequested();
 
             int currRow = -1;
-            ConsumeMLCOutput(process, cancelToken,
-                delegate (string line)
+            this._mlcProcess.ConsumeOutput(process, cancelToken,
+                (string line) =>
                 {
                     if (line.StartsWith("Using small pages"))
                     {
@@ -803,7 +592,7 @@ namespace IMLCGui
                         return false;
                     }
                 },
-                delegate (string line)
+                (string line) =>
                 {
                     string[] lineSplit = line.Split(new string[] { "latency" }, StringSplitOptions.RemoveEmptyEntries);
                     if (lineSplit.Length == 2)
@@ -825,7 +614,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this.logger.Log(LogLevel.WARN,
+                                this._logger.Log(LogLevel.WARN,
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -834,7 +623,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this.logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                        this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
                         return false;
                     }
                     currRow++;
@@ -847,7 +636,7 @@ namespace IMLCGui
             );
 
             cancelToken.ThrowIfCancellationRequested();
-            this.KillMLC(process);
+            this._mlcProcess.Kill(process);
             if (currRow == -1)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
@@ -894,9 +683,9 @@ namespace IMLCGui
                     }
                     return;
                 }
-                lock (this.mlcProcessLock)
+                lock (this._mlcProcess.ProcessLock)
                 {
-                    if (this.mlcProcessId != -1)
+                    if (this._mlcProcess.ProcessId != -1)
                     {
                         this.ShowMessageAsync("Cannot modify MLC path whilst MLC is running.", "Error");
                         return;
@@ -905,7 +694,7 @@ namespace IMLCGui
 
                 this.TxtConfigureLog.ScrollToHome();
                 this.TxtConfigureLog.Text = "";
-                this.logger.Log("Downloading and extracting MLC...");
+                this._logger.Log("Downloading and extracting MLC...");
                 this.WriteToConfigureLog(
                     $"Downloading Intel MLC...",
                     $"URL: {mlcUrl}",
@@ -914,14 +703,14 @@ namespace IMLCGui
 
                 if (File.Exists(tmpZipDestination))
                 {
-                    this.logger.Log($"Deleting existing file at \"{tmpZipDestination}\"");
+                    this._logger.Log($"Deleting existing file at \"{tmpZipDestination}\"");
                     try
                     {
                         File.Delete(tmpZipDestination);
                     }
                     catch (Exception ex)
                     {
-                        this.logger.Error($"Failed to delete existing file at \"{tmpZipDestination}\":", ex);
+                        this._logger.Error($"Failed to delete existing file at \"{tmpZipDestination}\":", ex);
                         return;
                     }
                     this.WriteToConfigureLog("Deleted existing MLC file.");
@@ -943,7 +732,7 @@ namespace IMLCGui
                             }
                             if (!FileUtils.DoesExist(tmpZipDestination))
                             {
-                                this.logger.Log($"Failed to locate downloaded file at \"{tmpZipDestination}\"");
+                                this._logger.Log($"Failed to locate downloaded file at \"{tmpZipDestination}\"");
                                 Dispatcher.Invoke(() =>
                                 {
                                     this.WriteToConfigureLog($"Failed to locate downloaded file at: {tmpZipDestination}");
@@ -957,10 +746,10 @@ namespace IMLCGui
                             string extractedZipDirectory = FileUtils.GetTempPath("mlc");
                             if (FileUtils.DoesExist(extractedZipDirectory))
                             {
-                                this.logger.Log($"Deleting existing temporary MLC directory at \"{extractedZipDirectory}\"");
+                                this._logger.Log($"Deleting existing temporary MLC directory at \"{extractedZipDirectory}\"");
                                 FileUtils.Delete(extractedZipDirectory);
                             }
-                            this.logger.Log($"File moved, extracting to \"{extractedZipDirectory}\"");
+                            this._logger.Log($"File moved, extracting to \"{extractedZipDirectory}\"");
                             Dispatcher.Invoke(() =>
                             {
                                 this.WriteToConfigureLog($"File moved, extracting to: {extractedZipDirectory}");
@@ -970,13 +759,13 @@ namespace IMLCGui
                             {
                                 try
                                 {
-                                    this.logger.Log($"Deleting \"{tmpZipDestination}\"...");
+                                    this._logger.Log($"Deleting \"{tmpZipDestination}\"...");
                                     FileUtils.Delete(tmpZipDestination);
                                     string mlcWindowsPath = Path.Combine(extractedZipDirectory, "Windows");
                                     string finalMLCPath = FileUtils.GetCurrentPath("mlc");
                                     if (!Directory.Exists(mlcWindowsPath))
                                     {
-                                        this.logger.Log($"Failed to locate extracted directory at \"{mlcWindowsPath}\"");
+                                        this._logger.Log($"Failed to locate extracted directory at \"{mlcWindowsPath}\"");
                                         Dispatcher.Invoke(() =>
                                         {
                                             this.WriteToConfigureLog($"Failed to locate MLC at: {mlcWindowsPath}");
@@ -985,34 +774,34 @@ namespace IMLCGui
                                     }
                                     if (FileUtils.DoesExist(finalMLCPath))
                                     {
-                                        this.logger.Log($"Deleting existing MLC directory at \"{finalMLCPath}\"");
+                                        this._logger.Log($"Deleting existing MLC directory at \"{finalMLCPath}\"");
                                         FileUtils.Delete(finalMLCPath);
                                     }
-                                    this.logger.Log($"Moving MLC from \"{mlcWindowsPath}\" to \"{finalMLCPath}\"");
+                                    this._logger.Log($"Moving MLC from \"{mlcWindowsPath}\" to \"{finalMLCPath}\"");
                                     FileUtils.CopyAndMove(mlcWindowsPath, finalMLCPath);
                                     FileUtils.Delete(mlcWindowsPath);
-                                    this.logger.Log($"Moved MLC to \"{finalMLCPath}\"");
+                                    this._logger.Log($"Moved MLC to \"{finalMLCPath}\"");
                                     Dispatcher.Invoke(() =>
                                     {
                                         this.WriteToConfigureLog($"Extracted MLC to: {finalMLCPath}");
                                         this.WriteToConfigureLog("Success!");
 
-                                        this.mlcPath = Path.Combine(finalMLCPath, "mlc.exe");
-                                        this.TxtConfigurePath.Text = this.mlcPath;
+                                        this._mlcProcess.Path = Path.Combine(finalMLCPath, "mlc.exe");
+                                        this.TxtConfigurePath.Text = this._mlcProcess.Path;
                                         try
                                         {
-                                            this.config.Set("mlcPath", this.mlcPath);
-                                            this.config.Save();
+                                            this._config.Set("mlcPath", this._mlcProcess.Path);
+                                            this._config.Save();
                                         }
                                         catch (Exception ex)
                                         {
-                                            this.logger.Error("Failed to update mlcPath in config:", ex);
+                                            this._logger.Error("Failed to update mlcPath in config:", ex);
                                         }
                                     });
                                 }
                                 catch (Exception ex)
                                 {
-                                    this.logger.Error($"Failed to extract {tmpZipDestination}:", ex);
+                                    this._logger.Error($"Failed to extract {tmpZipDestination}:", ex);
                                 }
                                 finally
                                 {
@@ -1038,7 +827,7 @@ namespace IMLCGui
                         }
                         catch (Exception ex)
                         {
-                            this.logger.Error($"Failed to download MLC to {tmpZipDestination}:", ex);
+                            this._logger.Error($"Failed to download MLC to {tmpZipDestination}:", ex);
                         }
                     }, () =>
                     {
@@ -1063,7 +852,7 @@ namespace IMLCGui
             }
         }
 
-        private async void DownloadMLC(CancellationToken cancelToken, string mlcUrl, string zipDestination, Runnable onComplete, Runnable onCancel, Runnable onFail)
+        private async void DownloadMLC(CancellationToken cancelToken, string mlcUrl, string zipDestination, Action onComplete, Action onCancel, Action onFail)
         {
             Task<string> task = DownloadService.DownloadFileAsync(cancelToken, mlcUrl, zipDestination, MLCWebClient_DownloadProgressChanged);
             try
@@ -1077,12 +866,12 @@ namespace IMLCGui
             }
             catch (Exception ex)
             {
-                this.logger.Error("Failed to download MLC:", ex);
+                this._logger.Error("Failed to download MLC:", ex);
                 if (onFail != null) onFail();
             }
         }
 
-        private async void ExtractMLC(CancellationToken cancelToken, string zipFile, string destination, Runnable onComplete, Runnable onCancel, Runnable onFail, Runnable finalRunnable)
+        private async void ExtractMLC(CancellationToken cancelToken, string zipFile, string destination, Action onComplete, Action onCancel, Action onFail, Action finalRunnable)
         {
             Task task = DownloadService.ExtractTGZ(cancelToken, zipFile, destination);
             try
@@ -1096,7 +885,7 @@ namespace IMLCGui
             }
             catch (Exception ex)
             {
-                this.logger.Error("Failed to extract MLC:", ex);
+                this._logger.Error("Failed to extract MLC:", ex);
                 if (onFail != null) onFail();
             }
             finally
@@ -1142,9 +931,9 @@ namespace IMLCGui
 
         private void BtnConfigureBrowse_Click(object sender, RoutedEventArgs e)
         {
-            lock (this.mlcProcessLock)
+            lock (this._mlcProcess.ProcessLock)
             {
-                if (this.mlcProcessId != -1)
+                if (this._mlcProcess.ProcessId != -1)
                 {
                     this.ShowMessageAsync("Error", "Cannot modify MLC path whilst MLC is running.");
                     return;
@@ -1158,17 +947,17 @@ namespace IMLCGui
                     this.ShowMessageAsync("Error", "Please select a valid exe.");
                     return;
                 }
-                this.mlcPath = openFileDialog.FileName;
-                this.TxtConfigurePath.Text = this.mlcPath;
+                this._mlcProcess.Path = openFileDialog.FileName;
+                this.TxtConfigurePath.Text = this._mlcProcess.Path;
                 try
                 {
-                    this.config.Set("mlcPath", openFileDialog.FileName);
-                    this.config.Save();
-                    this.logger.Log($"Updated mlcPath to: {this.mlcPath}");
+                    this._config.Set("mlcPath", openFileDialog.FileName);
+                    this._config.Save();
+                    this._logger.Log($"Updated mlcPath to: {this._mlcProcess.Path}");
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Error("Failed to save mlcPath to config:", ex);
+                    this._logger.Error("Failed to save mlcPath to config:", ex);
                 }
             }
         }
@@ -1177,24 +966,24 @@ namespace IMLCGui
         {
             if (e.Key == Key.Return)
             {
-                lock (this.mlcProcessLock)
+                lock (this._mlcProcess.ProcessLock)
                 {
-                    if (this.mlcProcessId != -1)
+                    if (this._mlcProcess.ProcessId != -1)
                     {
                         this.ShowMessageAsync("Error", "Cannot modify MLC path whilst MLC is running.");
                         return;
                     }
                 }
-                this.mlcPath = this.TxtConfigurePath.Text.Trim();
+                this._mlcProcess.Path = this.TxtConfigurePath.Text.Trim();
                 try
                 {
-                    this.config.Set("mlcPath", this.mlcPath);
-                    this.config.Save();
-                    this.logger.Log($"Updated mlcPath manually to: {this.mlcPath}");
+                    this._config.Set("mlcPath", this._mlcProcess.Path);
+                    this._config.Save();
+                    this._logger.Log($"Updated mlcPath manually to: {this._mlcProcess.Path}");
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Error("Failed to save mlcPath to config:", ex);
+                    this._logger.Error("Failed to save mlcPath to config:", ex);
                 }
             }
         }
