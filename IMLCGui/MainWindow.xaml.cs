@@ -50,7 +50,7 @@ namespace IMLCGui
             this._logger = new Logger("imlcgui.log");
 
             InitializeComponent();
-            FillLatencyRows();
+            InitGUI();
 
             this.LoadConfiguration();
             this._mlcProcess = new MLCProcess(this._logger, this._config.Get("mlcPath", ""));
@@ -62,7 +62,13 @@ namespace IMLCGui
             }
         }
 
-        private void FillLatencyRows()
+        private void InitGUI()
+        {
+            InitLatencyRows();
+            InitLatencyInjectDelay();
+        }
+
+        private void InitLatencyRows()
         {
             for (int i = 0; i < INJECT_DELAYS.Length; i++)
             {
@@ -77,6 +83,16 @@ namespace IMLCGui
                 Grid.SetRow(rowLatency, i + 1);
                 Grid.SetColumn(rowLatency, 0);
                 this.GridLatency.Children.Add(rowLatency);
+            }
+        }
+
+        private void InitLatencyInjectDelay()
+        {
+            this.ComboBoxInjectDelay.Items.Clear();
+            this.ComboBoxInjectDelay.Items.Add("All");
+            foreach (var delay in INJECT_DELAYS)
+            {
+                this.ComboBoxInjectDelay.Items.Add(delay);
             }
         }
 
@@ -415,6 +431,12 @@ namespace IMLCGui
 
         private void BtnLatencyRun_Click(object sender, RoutedEventArgs e)
         {
+            string injectDelayOverride = (string)this.ComboBoxInjectDelay.SelectedItem;
+            if (this.ComboBoxInjectDelay.SelectedIndex < 1)
+            {
+                injectDelayOverride = null;
+            }
+
             this.HandleMLCButton(() =>
             {
                 this.ProgressLatency.Value = 0;
@@ -432,7 +454,7 @@ namespace IMLCGui
             {
                 try
                 {
-                    StartMLCLatency(this._mlcProcess.CancellationTokenSource.Token);
+                    StartMLCLatency(this._mlcProcess.CancellationTokenSource.Token, injectDelayOverride);
                 }
                 catch (OperationCanceledException)
                 {
@@ -453,9 +475,14 @@ namespace IMLCGui
             });
         }
 
-        private bool StartMLCLatency(CancellationToken cancelToken)
+        private bool StartMLCLatency(CancellationToken cancelToken, string injectDelayOverride)
         {
-            Process process = this._mlcProcess.StartProcess("--loaded_latency");
+            string mlcArguments = "--loaded_latency";
+            if (injectDelayOverride != null)
+            {
+                mlcArguments += " -d" + injectDelayOverride;
+            }
+            Process process = this._mlcProcess.StartProcess(mlcArguments);
             if (process == null)
             {
                 return false;
@@ -489,7 +516,9 @@ namespace IMLCGui
                             currRow++;
                             return true;
                         }
-                        int progressValue = (int)((injectDelayIndex + 1) * 100 / (double)INJECT_DELAYS.Length);
+                        int progressValue = injectDelayOverride == null
+                                                ? (int)((injectDelayIndex + 1) * 100 / (double)INJECT_DELAYS.Length)
+                                                : 100;
                         Dispatcher.BeginInvoke(new Action(() =>
                         {
                             try
@@ -498,7 +527,26 @@ namespace IMLCGui
                                 rowLatency.InjectDelay = lineSplit[0];
                                 rowLatency.Latency = lineSplit[1];
                                 rowLatency.Bandwidth = lineSplit[2];
+
                                 this.ProgressLatency.Value = progressValue;
+
+                                if (injectDelayIndex == 0)
+                                {
+                                    this.GridLatencyScroller.ScrollToTop();
+                                }
+                                else if (injectDelayIndex == INJECT_DELAYS.Length - 1)
+                                {
+                                    this.GridLatencyScroller.ScrollToBottom();
+                                }
+                                else
+                                {
+                                    double actualScrollHeight = this.GridLatencyScroller.ActualHeight;
+                                    double actualRowHeight = rowLatency.ActualHeight;
+                                    if (this.GridLatencyScroller.VerticalOffset + actualScrollHeight < actualRowHeight * (injectDelayIndex + 1))
+                                    {
+                                        this.GridLatencyScroller.ScrollToVerticalOffset(actualRowHeight * (injectDelayIndex + 2) - actualScrollHeight);
+                                    }
+                                }
                             }
                             catch (Exception ex)
                             {

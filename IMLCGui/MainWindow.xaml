@@ -196,7 +196,7 @@
                     <CheckBox
                         HorizontalAlignment="Center"
                         Content="Peak Injection"
-                        Padding="4,4,0,4"
+                        Padding="4,8,0,8"
                         Name="ChckBoxBandwidthPeak"
                         ToolTip="Runs &quot;--peak_injection_bandwidth&quot;&#x0a;This will take less time to run."/>
 
@@ -224,7 +224,8 @@
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Hidden"
                                   VerticalAlignment="Stretch"
-                                  HorizontalAlignment="Stretch">
+                                  HorizontalAlignment="Stretch"
+                                  Name="GridLatencyScroller">
                         <Grid ShowGridLines="True" 
                               VerticalAlignment="Top"
                               Name="GridLatency">
@@ -271,7 +272,8 @@
                     <!-- Bottom Bar -->
                     <Grid Grid.Row="1" Grid.Column="0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80*" />
+                            <ColumnDefinition Width="65*" />
+                            <ColumnDefinition Width="15*" />
                             <ColumnDefinition Width="20*" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -284,6 +286,12 @@
                             Margin="4, 4, 2, 4"
                             Background="Gray"
                             Name="ProgressLatency" />
+                        <ComboBox
+                            Grid.Row="0" Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Margin="2, 4, 2, 4"
+                            Name="ComboBoxInjectDelay"
+                            ToolTip="Run the loaded latency test with a specific Inject Delay" />
                         <Button 
                             Grid.Row="0" Grid.Column="2"
                             HorizontalAlignment="Stretch"
