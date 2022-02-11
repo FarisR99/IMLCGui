@@ -356,11 +356,15 @@ namespace IMLCGui
                     string[] lineSplit = line.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
                     if (lineSplit.Length > 1)
                     {
-                        string bandwidth = lineSplit[lineSplit.Length - 1].Trim();
+                        string bandwidth = TrimNumericString(lineSplit[lineSplit.Length - 1]);
                         double bandwidthDouble = -1D;
                         if (!double.TryParse(bandwidth, out bandwidthDouble))
                         {
-                            this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                            this._logger.Log(
+                                LogLevel.WARN,
+                                $"Found unknown output line: \"{String.Join(":", lineSplit)}\"",
+                                $"Could not parse \"{bandwidth}\""
+                            );
                             this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                             return false;
                         }
@@ -649,7 +653,7 @@ namespace IMLCGui
                     string[] lineSplit = line.Split(new string[] { "latency" }, StringSplitOptions.RemoveEmptyEntries);
                     if (lineSplit.Length == 2)
                     {
-                        string latency = lineSplit[1].Trim();
+                        string latency = TrimNumericString(lineSplit[1]);
                         int finalRow = currRow;
                         Dispatcher.BeginInvoke(new Action(() =>
                         {
@@ -1039,6 +1043,28 @@ namespace IMLCGui
                     this._logger.Error("Failed to save mlcPath to config:", ex);
                 }
             }
+        }
+
+        private static string TrimNumericString(string inputString)
+        {
+            inputString = inputString.Trim();
+            string newString = "";
+            for (int i = 0; i < inputString.Length; i++)
+            {
+                char characterAt = inputString[i];
+                if ((characterAt >= '0' && characterAt <= '9') || characterAt == '.' || characterAt == ',')
+                {
+                    newString += characterAt;
+                }
+                else
+                {
+                    if (newString.Length > 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            return newString;
         }
     }
 }
