@@ -82,7 +82,7 @@ namespace IMLCGui
             string formattedMsg = $"[{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}] [{level}]: {logMessage}";
             if (level == LogLevel.ERROR)
             {
-                Console.WriteLine(formattedMsg);
+                Console.Error.WriteLine(formattedMsg);
             }
             else
             {
