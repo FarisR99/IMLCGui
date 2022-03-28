@@ -27,6 +27,11 @@ namespace IMLCGui
             PATHS_IN_USE.Remove(FilePath);
         }
 
+        public void Debug(params string[] logMessages)
+        {
+            Log(LogLevel.DEBUG, logMessages);
+        }
+
         public void Error(string errorMessage)
         {
             Log(LogLevel.ERROR, errorMessage);
@@ -47,6 +52,11 @@ namespace IMLCGui
             Log(LogLevel.INFO, logMessages);
         }
 
+        public void Warn(params string[] logMessages)
+        {
+            Log(LogLevel.WARN, logMessages);
+        }
+
         public void Log(LogLevel level, params string[] logMessages)
         {
             try
@@ -54,17 +64,21 @@ namespace IMLCGui
                 try
                 {
                     this.locker.AcquireWriterLock(1000);
+                    using (StreamWriter w = File.AppendText(this.FilePath))
+                    {
+                        foreach (string message in logMessages)
+                        {
+                            LogLine(w, level, message);
+                        }
+                    }
                 }
                 catch
                 {
-                    return;
-                }
-                using (StreamWriter w = File.AppendText(this.FilePath))
-                {
                     foreach (string message in logMessages)
                     {
-                        LogLine(w, level, message);
+                        LogLine(null, level, message);
                     }
+                    return;
                 }
             }
             catch (Exception ex)
@@ -88,12 +102,15 @@ namespace IMLCGui
             {
                 Console.WriteLine(formattedMsg);
             }
-            w.WriteLine(formattedMsg);
+            if (w != null)
+            {
+                w.WriteLine(formattedMsg);
+            }
         }
     }
 
     public enum LogLevel
     {
-        INFO, WARN, ERROR, PROCESS
+        DEBUG, INFO, WARN, ERROR, PROCESS
     }
 }
