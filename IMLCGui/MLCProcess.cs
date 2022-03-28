@@ -80,7 +80,6 @@ namespace IMLCGui
                     shouldProcessLine = true;
                 }
             }
-            return;
         }
 
         public void Kill()
@@ -99,6 +98,16 @@ namespace IMLCGui
                         return;
                     }
                     process = Process.GetProcessById(this.ProcessId);
+                    if (process == null)
+                    {
+                        if (this._logger != null)
+                        {
+                            this._logger.Warn($"Process with ID {this.ProcessId} is not running.");
+                        }
+                        this.ProcessId = -1;
+                        this.CancellationTokenSource = null;
+                        return;
+                    }
                 }
                 if (!process.HasExited)
                 {
@@ -115,6 +124,7 @@ namespace IMLCGui
                     }
                 }
                 this.ProcessId = -1;
+                this.CancellationTokenSource = null;
             }
         }
 
@@ -161,7 +171,7 @@ namespace IMLCGui
                     {
                         if (this._logger != null)
                         {
-                            this._logger.Log("User requested cancellation, killing MLC...");
+                            this._logger.Debug("User requested cancellation, killing MLC...");
                         }
                         Process runningProcess = Process.GetProcessById(this.ProcessId);
                         if (runningProcess != null && !runningProcess.HasExited)
@@ -180,9 +190,9 @@ namespace IMLCGui
                         }
                         else
                         {
-                            if (_logger != null)
+                            if (this._logger != null)
                             {
-                                _logger.Log("Killed MLC.");
+                                this._logger.Log("Killed MLC.");
                             }
                             this.ProcessId = -1;
                         }

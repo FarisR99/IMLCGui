@@ -266,7 +266,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this._logger.Log(LogLevel.WARN,
+                                this._logger.Warn(
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -275,7 +275,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this._logger.Log(LogLevel.WARN, "Found unknown output line");
+                        this._logger.Warn("Found unknown output line");
                         this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                     }
                     return false;
@@ -360,8 +360,7 @@ namespace IMLCGui
                         double bandwidthDouble = -1D;
                         if (!double.TryParse(bandwidth, out bandwidthDouble))
                         {
-                            this._logger.Log(
-                                LogLevel.WARN,
+                            this._logger.Warn(
                                 $"Found unknown output line: \"{String.Join(":", lineSplit)}\"",
                                 $"Could not parse \"{bandwidth}\""
                             );
@@ -396,7 +395,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this._logger.Log(LogLevel.WARN,
+                                this._logger.Warn(
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -405,7 +404,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                        this._logger.Warn($"Found unknown output line: [{String.Join(", ", lineSplit)}]");
                         this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                         return false;
                     }
@@ -516,7 +515,7 @@ namespace IMLCGui
                         int injectDelayIndex = Array.IndexOf(INJECT_DELAYS, injectDelay);
                         if (injectDelayIndex == -1)
                         {
-                            this._logger.Log(LogLevel.WARN, $"thread={Thread.CurrentThread.Name}: Skipping unknown inject delay = {injectDelay}");
+                            this._logger.Warn($"thread={Thread.CurrentThread.Name}: Skipping unknown inject delay = {injectDelay}");
                             currRow++;
                             return true;
                         }
@@ -554,7 +553,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this._logger.Log(LogLevel.WARN,
+                                this._logger.Warn(
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -563,7 +562,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this._logger.Log(LogLevel.WARN, "Found unknown output line");
+                        this._logger.Warn("Found unknown output line");
                         this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                         return false;
                     }
@@ -670,7 +669,7 @@ namespace IMLCGui
                             }
                             catch (Exception ex)
                             {
-                                this._logger.Log(LogLevel.WARN,
+                                this._logger.Warn(
                                     $"thread={Thread.CurrentThread.Name}: Failed to update user interface:",
                                     $"thread={Thread.CurrentThread.Name}: {ex.Message}"
                                 );
@@ -679,7 +678,7 @@ namespace IMLCGui
                     }
                     else
                     {
-                        this._logger.Log(LogLevel.WARN, $"Found unknown output line: [{String.Join(", ", lineSplit)}]");
+                        this._logger.Warn($"Found unknown output line: [{String.Join(", ", lineSplit)}]");
                         this.ShowMessageAsync("Error", "Found unknown output line, please raise a new Issue on the GitHub repository with the most recent log file output.");
                         return false;
                     }
@@ -789,7 +788,7 @@ namespace IMLCGui
                             }
                             if (!FileUtils.DoesExist(tmpZipDestination))
                             {
-                                this._logger.Log($"Failed to locate downloaded file at \"{tmpZipDestination}\"");
+                                this._logger.Warn($"Failed to locate downloaded file at \"{tmpZipDestination}\"");
                                 Dispatcher.Invoke(() =>
                                 {
                                     this.WriteToConfigureLog($"Failed to locate downloaded file at: {tmpZipDestination}");
@@ -822,7 +821,7 @@ namespace IMLCGui
                                     string finalMLCPath = FileUtils.GetCurrentPath("mlc");
                                     if (!Directory.Exists(mlcWindowsPath))
                                     {
-                                        this._logger.Log($"Failed to locate extracted directory at \"{mlcWindowsPath}\"");
+                                        this._logger.Warn($"Failed to locate extracted directory at \"{mlcWindowsPath}\"");
                                         Dispatcher.Invoke(() =>
                                         {
                                             this.WriteToConfigureLog($"Failed to locate MLC at: {mlcWindowsPath}");
