@@ -291,6 +291,7 @@
                             HorizontalAlignment="Stretch"
                             Margin="2, 4, 2, 4"
                             Name="ComboBoxInjectDelay"
+                            SelectedIndex="0"
                             ToolTip="Run the loaded latency test with a specific Inject Delay" />
                         <Button 
                             Grid.Row="0" Grid.Column="2"
