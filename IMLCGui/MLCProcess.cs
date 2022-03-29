@@ -89,6 +89,11 @@ namespace IMLCGui
 
         public void Kill(Process process)
         {
+            this.Kill(process, true);
+        }
+
+        public void Kill(Process process, bool destroyCancelTokenSource)
+        {
             lock (this.ProcessLock)
             {
                 if (process == null)
@@ -105,7 +110,10 @@ namespace IMLCGui
                             this._logger.Warn($"Process with ID {this.ProcessId} is not running.");
                         }
                         this.ProcessId = -1;
-                        this.CancellationTokenSource = null;
+                        if (destroyCancelTokenSource)
+                        {
+                            this.CancellationTokenSource = null;
+                        }
                         return;
                     }
                 }
@@ -119,12 +127,15 @@ namespace IMLCGui
                     {
                         if (this._logger != null)
                         {
-                            this._logger.Error($"Failed to kill {process.ProcessName}", ex);
+                            this._logger.Error($"Failed to kill {process.ProcessName}:", ex);
                         }
                     }
                 }
                 this.ProcessId = -1;
-                this.CancellationTokenSource = null;
+                if (destroyCancelTokenSource)
+                {
+                    this.CancellationTokenSource = null;
+                }
             }
         }
 
