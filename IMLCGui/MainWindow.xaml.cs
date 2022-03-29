@@ -195,15 +195,20 @@ namespace IMLCGui
             {
                 try
                 {
-                    if (!RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, "bandwidth"))
+                    if (!RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, false, "bandwidth"))
                     {
+                        this._mlcProcess.CancellationTokenSource = null;
                         return;
                     }
-                    RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, "latency");
+                    RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, true, "latency");
                 }
                 catch (OperationCanceledException)
                 {
                     this._mlcProcess.Kill();
+                }
+                catch (Exception ex)
+                {
+                    this._logger.Error("Failed to run Intel MLC quick test:", ex);
                 }
                 finally
                 {
@@ -220,7 +225,7 @@ namespace IMLCGui
             });
         }
 
-        private bool RunMLCQuickProcess(CancellationToken cancelToken, string mode)
+        private bool RunMLCQuickProcess(CancellationToken cancelToken, bool destroyCancelTokenSource, string mode)
         {
             string mlcArguments = "";
             if (mode == "bandwidth")
@@ -283,7 +288,7 @@ namespace IMLCGui
             );
 
             cancelToken.ThrowIfCancellationRequested();
-            this._mlcProcess.Kill(process);
+            this._mlcProcess.Kill(process, destroyCancelTokenSource);
             return true;
         }
 
