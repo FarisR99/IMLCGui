@@ -842,6 +842,11 @@ namespace IMLCGui
                                     FileUtils.CopyAndMove(mlcWindowsPath, finalMLCPath);
                                     FileUtils.Delete(mlcWindowsPath);
                                     this._logger.Log($"Moved MLC to \"{finalMLCPath}\"");
+                                    if (FileUtils.DoesExist(extractedZipDirectory))
+                                    {
+                                        this._logger.Log($"Deleting temporary MLC directory at \"{extractedZipDirectory}");
+                                        FileUtils.Delete(extractedZipDirectory);
+                                    }
                                     Dispatcher.Invoke(() =>
                                     {
                                         this.WriteToConfigureLog($"Extracted MLC to: {finalMLCPath}");
