@@ -718,7 +718,8 @@ namespace IMLCGui
         {
             lock (this.mlcDownloadLock)
             {
-                string zipFileName = "mlc_v3.9a.tgz";
+                string zipFileNameWithoutExt = "mlc_v3.9a";
+                string zipFileName = $"{zipFileNameWithoutExt}.tgz";
                 string mlcUrl = $"https://www.intel.com/content/dam/develop/external/us/en/documents/{zipFileName}";
                 string tmpZipDestination = FileUtils.GetTempPath(zipFileName);
 
@@ -802,7 +803,7 @@ namespace IMLCGui
                             }
                             else
                             {
-                                Dispatcher.Invoke(() => this.WriteToConfigureLog("Downloaded!", ""));
+                                Dispatcher.Invoke(() => this.WriteToConfigureLog("Downloaded!"));
                             }
                             string extractedZipDirectory = FileUtils.GetTempPath("mlc");
                             if (FileUtils.DoesExist(extractedZipDirectory))
@@ -822,7 +823,7 @@ namespace IMLCGui
                                 {
                                     this._logger.Log($"Deleting \"{tmpZipDestination}\"...");
                                     FileUtils.Delete(tmpZipDestination);
-                                    string mlcWindowsPath = Path.Combine(extractedZipDirectory, "Windows");
+                                    string mlcWindowsPath = Path.Combine(Path.Combine(extractedZipDirectory, zipFileNameWithoutExt), "Windows");
                                     string finalMLCPath = FileUtils.GetCurrentPath("mlc");
                                     if (!Directory.Exists(mlcWindowsPath))
                                     {
