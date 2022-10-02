@@ -189,6 +189,7 @@ namespace IMLCGui
                 this.TxtBoxQuickBandwidth.Text = "";
                 this.TxtBoxQuickLatency.Text = "";
                 this.BtnQuickRun.Content = "Cancel";
+                this.ToggleOtherTabs(false);
             },
             "Running Intel MLC quick test",
             () =>
@@ -222,6 +223,7 @@ namespace IMLCGui
             this.BtnQuickRun.Invoke(() =>
             {
                 this.BtnQuickRun.Content = "Run";
+                this.ToggleOtherTabs(true);
             });
         }
 
@@ -305,6 +307,7 @@ namespace IMLCGui
                 this.TxtBoxBandwidth11.Text = "";
                 this.TxtBoxBandwidthStreamTriad.Text = "";
                 this.BtnBandwidthRun.Content = "Cancel";
+                this.ToggleOtherTabs(false);
             },
             "Running Intel MLC bandwidth test",
             () =>
@@ -329,6 +332,7 @@ namespace IMLCGui
             this.BtnBandwidthRun.Invoke(() =>
             {
                 this.BtnBandwidthRun.Content = "Run";
+                this.ToggleOtherTabs(true);
             });
         }
 
@@ -456,6 +460,7 @@ namespace IMLCGui
                     rowLatency.Bandwidth = "";
                 }
                 this.BtnLatencyRun.Content = "Cancel";
+                this.ToggleOtherTabs(false);
             },
             "Running Intel MLC latency test",
             () =>
@@ -480,6 +485,7 @@ namespace IMLCGui
             this.BtnLatencyRun.Invoke(() =>
             {
                 this.BtnLatencyRun.Content = "Run";
+                this.ToggleOtherTabs(true);
             });
         }
 
@@ -602,6 +608,7 @@ namespace IMLCGui
                 this.TxtBoxL2Hit.Text = "";
                 this.TxtBoxL2HitM.Text = "";
                 this.BtnCacheRun.Content = "Cancel";
+                this.ToggleOtherTabs(false);
             },
             "Running Intel MLC cache test",
             () =>
@@ -626,6 +633,7 @@ namespace IMLCGui
             this.BtnCacheRun.Invoke(() =>
             {
                 this.BtnCacheRun.Content = "Run";
+                this.ToggleOtherTabs(true);
             });
         }
 
@@ -828,6 +836,7 @@ namespace IMLCGui
                                     if (!Directory.Exists(mlcWindowsPath))
                                     {
                                         this._logger.Warn($"Failed to locate extracted directory at \"{mlcWindowsPath}\"");
+                                        FileUtils.Delete(extractedZipDirectory);
                                         Dispatcher.Invoke(() =>
                                         {
                                             this.WriteToConfigureLog($"Failed to locate MLC at: {mlcWindowsPath}");
@@ -1051,6 +1060,18 @@ namespace IMLCGui
                 catch (Exception ex)
                 {
                     this._logger.Error("Failed to save mlcPath to config:", ex);
+                }
+            }
+        }
+
+        private void ToggleOtherTabs(bool enabled)
+        {
+            for (int tabIndex = 0; tabIndex < this.TabCtrlBenchmark.Items.Count; tabIndex++)
+            {
+                if (tabIndex != this.TabCtrlBenchmark.SelectedIndex)
+                {
+                    MetroTabItem tab = (MetroTabItem)this.TabCtrlBenchmark.Items[tabIndex];
+                    tab.IsEnabled = enabled;
                 }
             }
         }
