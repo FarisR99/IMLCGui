@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# IMLCGui files
+**/IMLCGui.exe
+**/IMLCGui.exe.config
+**/imlcgui.log
+**/mlc
