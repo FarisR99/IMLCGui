@@ -137,7 +137,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxBandwidthAll"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
 
                         <!-- Row: 3:1 Reads-Writes -->
@@ -152,7 +153,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxBandwidth31"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
 
                         <!-- Row: 2:1 Reads-Writes -->
@@ -167,7 +169,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxBandwidth21"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
 
                         <!-- Row: 1:1 Reads-Writes -->
@@ -182,7 +185,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxBandwidth11"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
 
                         <!-- Row: Stream-triad like -->
@@ -197,7 +201,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxBandwidthStreamTriad"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
                     </Grid>
 
@@ -355,7 +360,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxL2Hit"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
 
                         <Label 
@@ -369,7 +375,8 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxL2HitM"
-                                IsReadOnly="True" />
+                                IsReadOnly="True"
+                                Focusable="False" />
                         </Border>
                     </Grid>
 
