@@ -154,6 +154,7 @@ namespace IMLCGui
                 }
                 process.Start();
                 this.ProcessId = process.Id;
+                process.PriorityClass = ProcessPriorityClass.AboveNormal;
             }
             return process;
         }
