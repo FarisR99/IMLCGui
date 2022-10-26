@@ -1084,9 +1084,13 @@ namespace IMLCGui
                 }
             }
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.CheckFileExists = true;
+            openFileDialog.DefaultExt = ".exe";
+            openFileDialog.AddExtension = true;
+            openFileDialog.Filter = "Executable files (*.exe)|*.exe|MLC executable|mlc.exe|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == true)
             {
-                if (!openFileDialog.CheckFileExists)
+                if (!File.Exists(openFileDialog.FileName))
                 {
                     this.ShowMessageAsync("Error", "Please select a valid exe.");
                     return;
