@@ -56,7 +56,11 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxQuickBandwidth"
-                                IsReadOnly="True" />
+                                ToolTip="Double click to run quick bandwidth test."
+                                IsReadOnly="True"
+                                Focusable="False"
+                                Cursor="Arrow"
+                                MouseDoubleClick="TxtBoxQuickBandwidth_DoubleClick" />
                         </Border>
 
                         <Label 
@@ -72,7 +76,11 @@
                                 Height="30"
                                 HorizontalContentAlignment="Center"
                                 Name="TxtBoxQuickLatency"
-                                IsReadOnly="True" />
+                                ToolTip="Double click to run quick latency test."
+                                IsReadOnly="True"
+                                Focusable="False"
+                                Cursor="Arrow"
+                                MouseDoubleClick="TxtBoxQuickLatency_DoubleClick" />
                         </Border>
                     </Grid>
 

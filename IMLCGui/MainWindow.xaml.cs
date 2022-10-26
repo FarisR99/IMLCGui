@@ -218,6 +218,74 @@ namespace IMLCGui
             });
         }
 
+        private void TxtBoxQuickBandwidth_DoubleClick(object sender, RoutedEventArgs e)
+        {
+            if (this._mlcProcess.ProcessId != -1)
+            {
+                return;
+            }
+            this.HandleMLCButton(() =>
+            {
+                this.TxtBoxQuickBandwidth.Text = "";
+                this.BtnQuickRun.Content = "Cancel";
+                this.ToggleOtherTabs(false);
+            },
+            "Running Intel MLC quick bandwidth test",
+            () =>
+            {
+                try
+                {
+                    RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, true, "bandwidth");
+                }
+                catch (OperationCanceledException)
+                {
+                    this._mlcProcess.Kill();
+                }
+                catch (Exception ex)
+                {
+                    this._logger.Error("Failed to run Intel MLC quick bandwidth test:", ex);
+                }
+                finally
+                {
+                    this.ResetQuickRunButton();
+                }
+            });
+        }
+
+        private void TxtBoxQuickLatency_DoubleClick(object sender, RoutedEventArgs e)
+        {
+            if (this._mlcProcess.ProcessId != -1)
+            {
+                return;
+            }
+            this.HandleMLCButton(() =>
+            {
+                this.TxtBoxQuickLatency.Text = "";
+                this.BtnQuickRun.Content = "Cancel";
+                this.ToggleOtherTabs(false);
+            },
+            "Running Intel MLC quick latency test",
+            () =>
+            {
+                try
+                {
+                    RunMLCQuickProcess(this._mlcProcess.CancellationTokenSource.Token, true, "latency");
+                }
+                catch (OperationCanceledException)
+                {
+                    this._mlcProcess.Kill();
+                }
+                catch (Exception ex)
+                {
+                    this._logger.Error("Failed to run Intel MLC quick latency test:", ex);
+                }
+                finally
+                {
+                    this.ResetQuickRunButton();
+                }
+            });
+        }
+
         private void ResetQuickRunButton()
         {
             this.BtnQuickRun.Invoke(() =>
