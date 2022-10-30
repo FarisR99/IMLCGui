@@ -44,6 +44,7 @@ namespace IMLCGui
         private Logger _logger;
         private CustomConfig _config;
         private MLCProcess _mlcProcess;
+        private AutoUpdater autoUpdater;
 
         public MainWindow()
         {
@@ -59,6 +60,19 @@ namespace IMLCGui
             if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
             {
                 this.ShowMessageAsync("Warning", $"You are not running this application as an administrator.{Environment.NewLine}It is strongly recommended to run this program as an administrator to obtain accurate data.");
+            }
+
+            this.autoUpdater = new AutoUpdater();
+            this.Title = $"{this.Title} v{this.autoUpdater.CurrentVersion}";
+            if (this.ShouldCheckForUpdatesOnStart())
+            {
+                this.CheckForUpdates((success) =>
+                {
+                    BtnUpdate.IsEnabled = true;
+                });
+            } else
+            {
+                BtnUpdate.IsEnabled = true;
             }
         }
 
@@ -101,6 +115,75 @@ namespace IMLCGui
             this._config = new CustomConfig("imlcgui.properties");
         }
 
+        private bool ShouldCheckForUpdatesOnStart()
+        {
+            if (this._config.Has("checkForUpdatesOnStart"))
+            {
+                return bool.Parse(this._config.Get("checkForUpdatesOnStart"));
+            }
+            else
+            {
+                this._config.Set("checkForUpdatesOnStart", "true");
+                return true;
+            }
+        }
+
+        private void CheckForUpdates(Action<bool> onComplete = null)
+        {
+            bool shouldCheckForUpdates = true;
+            if (this._config.Has("lastUpdateCheck"))
+            {
+                long lastUpdateCheck = long.Parse(this._config.Get("lastUpdateCheck"));
+                shouldCheckForUpdates = DateTimeOffset.UtcNow.Subtract(DateTimeOffset.FromUnixTimeMilliseconds(lastUpdateCheck)).TotalDays > 5;
+            }
+            this._config.Set("lastUpdateCheck", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
+            this._config.Save();
+            if (!shouldCheckForUpdates)
+            {
+                if (onComplete != null) onComplete.Invoke(false);
+                return;
+            }
+            Task.Run(async () =>
+            {
+                try
+                {
+                    this._logger.Log("Checking for updates...");
+                    await autoUpdater.CheckForUpdates();
+                    bool hasUpdate = autoUpdater.HasUpdateAvailable();
+                    if (hasUpdate)
+                    {
+                        this._logger.Log($"Found new IMLCGui version: {AutoUpdater.FormatVersion(autoUpdater.GetLatestReleaseVersion())}");
+                        this.Invoke(() =>
+                        {
+                            BtnUpdate.ToolTip = "Update available!";
+                        });
+                    }
+                    else
+                    {
+                        this._logger.Log("No updates found. Running latest version: " + autoUpdater.CurrentVersion);
+                    }
+                    if (onComplete != null)
+                    {
+                        this.Invoke(() =>
+                        {
+                            onComplete.Invoke(hasUpdate);
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this._logger.Error($"Failed to check for updates:", ex);
+                    if (onComplete != null)
+                    {
+                        this.Invoke(() =>
+                        {
+                            onComplete.Invoke(false);
+                        });
+                    }
+                }
+            });
+        }
+
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             try
@@ -116,10 +199,63 @@ namespace IMLCGui
         private void BtnHelp_Click(object sender, RoutedEventArgs e)
         {
             this.ShowMessageAsync("Information",
-                "Intel Memory Latency Checker GUI" + Environment.NewLine +
+                $"Intel Memory Latency Checker GUI v{AutoUpdater.GetCurrentVersion()}" + Environment.NewLine +
                 Environment.NewLine +
                 "A GUI wrapper for Intel MLC made in C# by KingFaris10."
             );
+        }
+
+        private void BtnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.autoUpdater.CheckingForUpdate) return;
+            BtnUpdate.IsEnabled = false;
+            if (this.autoUpdater.LatestRelease == null || !this.autoUpdater.HasUpdateAvailable())
+            {
+                this._config.Set("lastUpdateCheck", null);
+                this.CheckForUpdates((successful) =>
+                {
+                    BtnUpdate.IsEnabled = true;
+                });
+            }
+            else
+            {
+                BtnUpdate.Invoke(async () =>
+                {
+                    try
+                    {
+                        MessageDialogResult updateDialogResult = await this.ShowMessageAsync(
+                            "Autoupdater",
+                            $"New update found! Click OK to download to current directory.{Environment.NewLine}" +
+                            $"Current version: {this.autoUpdater.CurrentVersion}{Environment.NewLine}" +
+                            $"New version: {AutoUpdater.FormatVersion(this.autoUpdater.GetLatestReleaseVersion())}",
+                            MessageDialogStyle.AffirmativeAndNegative
+                        );
+                        if (updateDialogResult == MessageDialogResult.Affirmative)
+                        {
+                            try
+                            {
+                                await this.autoUpdater.DownloadLatest(this._logger);
+                                BtnUpdate.Visibility = Visibility.Hidden;
+                            }
+                            catch (Exception ex)
+                            {
+                                this._logger.Error("Failed to update:", ex);
+                            }
+                        }
+                        else
+                        {
+                            this._logger.Debug("Version update skipped.");
+                        }
+                    }
+                    finally
+                    {
+                        this.Invoke(() =>
+                        {
+                            BtnUpdate.IsEnabled = true;
+                        });
+                    }
+                });
+            }
         }
 
         // MLC Handling

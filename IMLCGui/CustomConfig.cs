@@ -26,12 +26,30 @@ namespace IMLCGui
             return this.list.ContainsKey(field) ? this.list[field] : null;
         }
 
+        public bool Has(string field)
+        {
+            return this.list.ContainsKey(field);
+        }
+
         public void Set(string field, string value)
         {
             if (!this.list.ContainsKey(field))
-                this.list.Add(field, value.ToString());
+            {
+                if (value != null)
+                {
+                    this.list.Add(field, value.ToString());
+                }
+            }
             else
-                this.list[field] = value.ToString();
+            {
+                if (value != null)
+                {
+                    this.list[field] = value.ToString();
+                } else
+                {
+                    this.list.Remove(field);
+                }
+            }
         }
 
         public void Save()

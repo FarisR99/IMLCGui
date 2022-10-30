@@ -11,11 +11,14 @@ namespace IMLCGui
     // Taken from https://stackoverflow.com/questions/49034241/canceling-webclient-download-while-waiting-for-download-to-complete
     internal class DownloadService
     {
-        public static async Task<string> DownloadFileAsync(CancellationToken cancellationToken, string url, string outputFileName, DownloadProgressChangedEventHandler handler)
+        public static async Task<string> DownloadFileAsync(CancellationToken? cancellationToken, string url, string outputFileName, DownloadProgressChangedEventHandler handler)
         {
             using (var webClient = new WebClient())
             {
-                cancellationToken.Register(webClient.CancelAsync);
+                if (cancellationToken.HasValue)
+                {
+                    cancellationToken.Value.Register(webClient.CancelAsync);
+                }
 
                 try
                 {

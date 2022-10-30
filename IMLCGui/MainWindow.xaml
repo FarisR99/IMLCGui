@@ -13,6 +13,12 @@
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Button 
+                Content="↻"
+                Name="BtnUpdate"
+                Click="BtnUpdate_Click"
+                ToolTip="Check for updates"
+                IsEnabled="False" />
+            <Button 
                 Content="?"
                 Name="BtnHelp"
                 Click="BtnHelp_Click" />
