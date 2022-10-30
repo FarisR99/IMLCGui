@@ -154,7 +154,15 @@ namespace IMLCGui
                 }
                 process.Start();
                 this.ProcessId = process.Id;
-                process.PriorityClass = ProcessPriorityClass.AboveNormal;
+
+                if (Process.GetCurrentProcess().PriorityClass.CompareTo(ProcessPriorityClass.AboveNormal) >= 0)
+                {
+                    process.PriorityClass = ProcessPriorityClass.RealTime;
+                }
+                else
+                {
+                    process.PriorityClass = ProcessPriorityClass.AboveNormal;
+                }
             }
             return process;
         }
