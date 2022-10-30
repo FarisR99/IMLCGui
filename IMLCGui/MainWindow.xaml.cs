@@ -201,7 +201,10 @@ namespace IMLCGui
             this.ShowMessageAsync("Information",
                 $"Intel Memory Latency Checker GUI v{AutoUpdater.GetCurrentVersion()}" + Environment.NewLine +
                 Environment.NewLine +
-                "A GUI wrapper for Intel MLC made in C# by KingFaris10."
+                "A GUI wrapper for Intel MLC made in C# by KingFaris10." + Environment.NewLine +
+                Environment.NewLine +
+                "https://github.com/FarisR99/IMLCGui" + Environment.NewLine +
+                "https://kingfaris.co.uk/"
             );
         }
 
