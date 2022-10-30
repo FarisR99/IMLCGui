@@ -5,7 +5,7 @@ Lightweight GUI wrapper for [Intel Memory Latency Checker](https://www.intel.com
 ![IMLCGui](https://user-images.githubusercontent.com/3731915/149428525-a9370dcd-330b-40fa-a24e-979067ba0647.png)
 
 ## Compatibility
-Requires a Windows system with at least .NET Framework 4.6.
+Requires a Windows system with at least .NET Framework 4.6.2.
 
 ## Usage
 1. Either download the compiled executable from [Releases](../../releases), or compile this project yourself (Visual Studio and `msbuild /t:ILRepack`).
