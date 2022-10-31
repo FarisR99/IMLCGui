@@ -1,10 +1,8 @@
-﻿using Octokit;
+﻿using IMLCGui.GitHub;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace IMLCGui
@@ -19,7 +17,7 @@ namespace IMLCGui
 
         public AutoUpdater()
         {
-            this._client = new GitHubClient(new ProductHeaderValue("IMLCGui"));
+            this._client = new GitHubClient("IMLCGui", (GetCurrentVersion() ?? new Version(1, 0, 0)).ToString());
             this._client.SetRequestTimeout(TimeSpan.FromSeconds(2));
 
             this.CurrentVersion = GetCurrentVersion();
@@ -30,13 +28,16 @@ namespace IMLCGui
             this.LatestRelease = null;
             this.CheckingForUpdate = true;
 
-            IReadOnlyList<Release> releases = null;
+            List<Release> releases;
             try
             {
-                releases = await this._client.Repository.Release.GetAll("FarisR99", "IMLCGui");
+                releases = await this._client.GetReleases("FarisR99", "IMLCGui");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.Error.WriteLine("Failed to check for updates: " + ex.Message);
+                Console.Error.WriteLine(ex.StackTrace);
+
                 this.CheckingForUpdate = false;
                 return;
             }
@@ -48,7 +49,7 @@ namespace IMLCGui
 
             foreach (var release in releases)
             {
-                if (!release.Prerelease)
+                if (!release.prerelease)
                 {
                     this.LatestRelease = release;
                     break;
@@ -60,7 +61,9 @@ namespace IMLCGui
         public bool HasUpdateAvailable()
         {
             if (this.CurrentVersion == null) return true;
-            if (this.LatestRelease == null) return false;
+            if (this.LatestRelease == null
+                || this.LatestRelease.assets == null
+                || this.LatestRelease.assets.Count == 0) return false;
             Version latestReleaseVersion = new Version(GetLatestReleaseVersion());
             return latestReleaseVersion.CompareTo(this.CurrentVersion) > 0;
         }
@@ -68,14 +71,14 @@ namespace IMLCGui
         public string GetLatestReleaseVersion()
         {
             if (this.LatestRelease == null) return null;
-            return this.LatestRelease.TagName;
+            return this.LatestRelease.tag_name;
         }
 
         public async Task DownloadLatest(Logger logger)
         {
             string latestReleaseVersion = GetLatestReleaseVersion();
             logger.Log($"Downloading latest IMLCGui version {FormatVersion(latestReleaseVersion)}...");
-            string outputFile = await DownloadService.DownloadFileAsync(null, FormatGithubAssetUrl(latestReleaseVersion), $"IMLCGui-{latestReleaseVersion}.exe", null);
+            string outputFile = await DownloadService.DownloadFileAsync(null, this.LatestRelease.assets[0].browser_download_url, $"IMLCGui-{latestReleaseVersion}.exe", null);
             logger.Log($"Downloaded latest version to {outputFile}!");
         }
 
@@ -90,11 +93,6 @@ namespace IMLCGui
                 : (fileVersionInfo.FileVersion != null
                     ? new Version(fileVersionInfo.FileVersion)
                     : null);
-        }
-
-        public static string FormatGithubAssetUrl(string tag)
-        {
-            return $"https://github.com/FarisR99/IMLCGui/releases/download/{tag}/IMLCGui.exe";
         }
 
         public static string FormatVersion(string version)

@@ -73,8 +73,8 @@
     <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.19\lib\net45\Microsoft.Xaml.Behaviors.dll</HintPath>
     </Reference>
-    <Reference Include="Octokit, Version=4.0.1.0, Culture=neutral, PublicKeyToken=0be8860aee462442, processorArchitecture=MSIL">
-      <HintPath>..\packages\Octokit.4.0.1\lib\netstandard2.0\Octokit.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -117,6 +117,7 @@
     <Compile Include="CustomConfig.cs" />
     <Compile Include="DownloadManager.cs" />
     <Compile Include="FileUtils.cs" />
+    <Compile Include="GitHubAPI.cs" />
     <Compile Include="LatencyRow.xaml.cs">
       <DependentUpon>LatencyRow.xaml</DependentUpon>
     </Compile>
@@ -177,6 +178,6 @@
     <Error Condition="!Exists('..\packages\ILRepack.2.0.18\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.18\build\ILRepack.props'))" />
   </Target>
   <Target Name="ILRepack">
-    <Exec Command="..\packages\ILRepack.2.0.18\tools\ILRepack.exe bin\Release\IMLCGui.exe /out:IMLCGui.exe bin\Release\ControlzEx.dll bin\Release\ICSharpCode.SharpZipLib.dll bin\Release\de\MahApps.Metro.resources.dll bin\Release\MahApps.Metro.dll bin\Release\Microsoft.Xaml.Behaviors.dll bin\Release\Octokit.dll" />
+    <Exec Command="..\packages\ILRepack.2.0.18\tools\ILRepack.exe bin\Release\IMLCGui.exe /out:IMLCGui.exe bin\Release\ControlzEx.dll bin\Release\ICSharpCode.SharpZipLib.dll bin\Release\de\MahApps.Metro.resources.dll bin\Release\MahApps.Metro.dll bin\Release\Microsoft.Xaml.Behaviors.dll bin\Release\Newtonsoft.Json.dll" />
   </Target>
 </Project>
