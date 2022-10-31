@@ -70,7 +70,8 @@ namespace IMLCGui
                 {
                     BtnUpdate.IsEnabled = true;
                 });
-            } else
+            }
+            else
             {
                 BtnUpdate.IsEnabled = true;
             }
@@ -166,7 +167,7 @@ namespace IMLCGui
                     {
                         this.Invoke(() =>
                         {
-                            onComplete.Invoke(hasUpdate);
+                            onComplete.Invoke(true);
                         });
                     }
                 }
@@ -212,12 +213,20 @@ namespace IMLCGui
         {
             if (this.autoUpdater.CheckingForUpdate) return;
             BtnUpdate.IsEnabled = false;
-            if (this.autoUpdater.LatestRelease == null || !this.autoUpdater.HasUpdateAvailable())
+            if (!this.autoUpdater.HasUpdateAvailable())
             {
                 this._config.Set("lastUpdateCheck", null);
                 this.CheckForUpdates((successful) =>
                 {
                     BtnUpdate.IsEnabled = true;
+                    if (successful && !this.autoUpdater.HasUpdateAvailable())
+                    {
+                        this.ShowMessageAsync(
+                            "Autoupdater",
+                            $"No new update found.{Environment.NewLine}" +
+                            $"Current version: {this.autoUpdater.CurrentVersion}"
+                        );
+                    }
                 });
             }
             else
