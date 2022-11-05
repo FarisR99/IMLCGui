@@ -169,12 +169,12 @@ namespace IMLCGui
 
         public bool Stop()
         {
-            bool retVal = false;
+            bool stopped = false;
             if (this.CancellationTokenSource != null && !this.CancellationTokenSource.IsCancellationRequested)
             {
                 this.CancellationTokenSource.Cancel();
                 this.CancellationTokenSource = null;
-                retVal = true;
+                stopped = true;
                 try
                 {
                     Thread.Sleep(250);
@@ -196,16 +196,12 @@ namespace IMLCGui
                         Process runningProcess = Process.GetProcessById(this.ProcessId);
                         if (runningProcess != null && !runningProcess.HasExited)
                         {
-                            if (!runningProcess.HasExited)
+                            string processName = runningProcess.ProcessName;
+                            runningProcess.Kill();
+                            runningProcess.WaitForExit();
+                            if (this._logger != null)
                             {
-                                string processName = runningProcess.ProcessName;
-                                runningProcess.Kill();
-                                runningProcess.WaitForExit();
-                                if (this._logger != null)
-                                {
-                                    this._logger.Log($"Killed process: {processName}");
-                                }
-                                this.ProcessId = -1;
+                                this._logger.Log($"Killed process: {processName}");
                             }
                         }
                         else
@@ -214,7 +210,6 @@ namespace IMLCGui
                             {
                                 this._logger.Log("Killed MLC.");
                             }
-                            this.ProcessId = -1;
                         }
                     }
                     catch (Exception ex)
@@ -224,10 +219,14 @@ namespace IMLCGui
                             this._logger.Error("Failed to kill MLC process:", ex);
                         }
                     }
-                    retVal = true;
+                    finally
+                    {
+                        this.ProcessId = -1;
+                    }
+                    stopped = true;
                 }
             }
-            return retVal;
+            return stopped;
         }
     }
 }
