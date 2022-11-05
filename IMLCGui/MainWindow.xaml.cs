@@ -46,6 +46,8 @@ namespace IMLCGui
         private MLCProcess _mlcProcess;
         private AutoUpdater autoUpdater;
 
+        private bool runningTest = false;
+
         public MainWindow()
         {
             this._logger = new Logger("imlcgui.log");
@@ -305,7 +307,11 @@ namespace IMLCGui
         {
             if (this._mlcProcess.Stop())
             {
-                return;
+                if (this.runningTest)
+                {
+                    this.runningTest = false;
+                    return;
+                }
             }
             string validationResult = ValidateMLC();
             if (validationResult != null)
@@ -314,14 +320,14 @@ namespace IMLCGui
                 return;
             }
 
-            if (resetUI != null)
-            {
-                resetUI();
-            }
-
+            this.runningTest = true;
             if (logMessage != null)
             {
                 this._logger.Log(logMessage);
+            }
+            if (resetUI != null)
+            {
+                resetUI();
             }
 
             this._mlcProcess.CancellationTokenSource = new CancellationTokenSource();
@@ -436,6 +442,7 @@ namespace IMLCGui
 
         private void ResetQuickRunButton()
         {
+            this.runningTest = false;
             this.BtnQuickRun.Invoke(() =>
             {
                 this.BtnQuickRun.Content = "Run";
@@ -545,6 +552,7 @@ namespace IMLCGui
 
         private void ResetBandwidthRunButton()
         {
+            this.runningTest = false;
             this.BtnBandwidthRun.Invoke(() =>
             {
                 this.BtnBandwidthRun.Content = "Run";
@@ -698,6 +706,7 @@ namespace IMLCGui
 
         private void ResetLatencyRunButton()
         {
+            this.runningTest = false;
             this.BtnLatencyRun.Invoke(() =>
             {
                 this.BtnLatencyRun.Content = "Run";
@@ -846,6 +855,7 @@ namespace IMLCGui
 
         private void ResetCacheRunButton()
         {
+            this.runningTest = false;
             this.BtnCacheRun.Invoke(() =>
             {
                 this.BtnCacheRun.Content = "Run";
