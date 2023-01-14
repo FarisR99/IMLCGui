@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace IMLCGui
 {
-    internal class MLCProcess
+    internal class MLCProcessManager
     {
         private Logger _logger;
 
@@ -15,7 +15,7 @@ namespace IMLCGui
         public CancellationTokenSource CancellationTokenSource;
         public int ProcessId { get; private set; } = -1;
 
-        public MLCProcess(Logger logger, string path)
+        public MLCProcessManager(Logger logger, string path)
         {
             this._logger = logger;
             this.Path = path;
