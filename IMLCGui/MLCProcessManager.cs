@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMLCGui
 {
@@ -10,6 +10,7 @@ namespace IMLCGui
         private Logger _logger;
 
         public string Path = "";
+        private string Version = null;
 
         public object ProcessLock { get; } = new object();
         public CancellationTokenSource CancellationTokenSource;
@@ -80,6 +81,39 @@ namespace IMLCGui
                     shouldProcessLine = true;
                 }
             }
+        }
+
+        public string GetVersion()
+        {
+            return this.Version;
+        }
+
+        public void FetchVersion()
+        {
+            if (this.Path == null)
+            {
+                this.Version = null;
+                return;
+            }
+            string mlcPath = this.Path;
+            if (mlcPath.Trim().Length == 0)
+            {
+                mlcPath = FileUtils.GetCurrentPath("mlc.exe");
+                if (!FileUtils.DoesExist(mlcPath))
+                {
+                    this.Version = null;
+                    return;
+                }
+            }
+            Task.Run(async () =>
+            {
+                this.Version = await MLCProcess.GetMLCVersion(mlcPath);
+                if (this.Version != null)
+                {
+                    this.Version = this.Version.Trim();
+                }
+                Console.Out.WriteLine("Detected MLC version: " + this.Version);
+            });
         }
 
         public void Kill()
