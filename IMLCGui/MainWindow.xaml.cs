@@ -41,6 +41,8 @@ namespace IMLCGui
             "20000",
         };
 
+        private static readonly string MLC_DOWNLOAD_VERSION = "v3.10";
+
         private Logger _logger;
         private CustomConfig _config;
         private MLCProcessManager _mlcProcessManager;
@@ -57,6 +59,8 @@ namespace IMLCGui
 
             this.LoadConfiguration();
             this._mlcProcessManager = new MLCProcessManager(this._logger, this._config.Get("mlcPath", ""));
+            this.ValidateMLC();
+            this._mlcProcessManager.FetchVersion();
             this.TxtConfigurePath.Text = this._mlcProcessManager.Path;
 
             if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
@@ -293,6 +297,7 @@ namespace IMLCGui
                     {
                         this._logger.Error("Failed to save mlcPath to config:", ex);
                     }
+                    this._mlcProcessManager.FetchVersion();
                     return null;
                 }
             }
@@ -305,6 +310,11 @@ namespace IMLCGui
 
         private void HandleMLCButton(Action resetUI, string logMessage, Action taskAction)
         {
+            if (this._mlcProcessManager.GetVersion() == null)
+            {
+                this.ShowMessageAsync("Error", "Could not fetch MLC version.");
+                return;
+            }
             if (this._mlcProcessManager.Stop())
             {
                 if (this.runningTest)
@@ -452,14 +462,14 @@ namespace IMLCGui
 
         private bool RunMLCQuickProcess(CancellationToken cancelToken, bool destroyCancelTokenSource, string mode)
         {
-            string mlcArguments = "";
+            string mlcArguments = null;
             if (mode == "bandwidth")
             {
-                mlcArguments = "--bandwidth_matrix";
+                mlcArguments = MLCProcess.GenerateQuickBandwidthArguments(this._mlcProcessManager.GetVersion());
             }
             else if (mode == "latency")
             {
-                mlcArguments = "--latency_matrix";
+                mlcArguments = MLCProcess.GenerateQuickLatencyArguments(this._mlcProcessManager.GetVersion());
             }
             else
             {
@@ -562,8 +572,7 @@ namespace IMLCGui
 
         private bool StartMLCBandwidth(CancellationToken cancelToken, bool peakInjection)
         {
-            string mlcArguments = peakInjection ? "--peak_injection_bandwidth" : "--max_bandwidth";
-            Process process = this._mlcProcessManager.StartProcess(mlcArguments);
+            Process process = this._mlcProcessManager.StartProcess(MLCProcess.GenerateBandwidthArguments(this._mlcProcessManager.GetVersion(), peakInjection));
             if (process == null)
             {
                 return false;
@@ -716,12 +725,7 @@ namespace IMLCGui
 
         private bool StartMLCLatency(CancellationToken cancelToken, string injectDelayOverride)
         {
-            string mlcArguments = "--loaded_latency";
-            if (injectDelayOverride != null)
-            {
-                mlcArguments += " -d" + injectDelayOverride;
-            }
-            Process process = this._mlcProcessManager.StartProcess(mlcArguments);
+            Process process = this._mlcProcessManager.StartProcess(MLCProcess.GenerateLatencyArguments(this._mlcProcessManager.GetVersion(), injectDelayOverride));
             if (process == null)
             {
                 return false;
@@ -865,7 +869,7 @@ namespace IMLCGui
 
         private bool StartMLCCache(CancellationToken cancelToken)
         {
-            Process process = this._mlcProcessManager.StartProcess("--c2c_latency");
+            Process process = this._mlcProcessManager.StartProcess(MLCProcess.GenerateCacheArguments(this._mlcProcessManager.GetVersion()));
             if (process == null)
             {
                 return false;
@@ -952,7 +956,7 @@ namespace IMLCGui
         {
             lock (this.mlcDownloadLock)
             {
-                string zipFileNameWithoutExt = "mlc_v3.9a";
+                string zipFileNameWithoutExt = $"mlc_{MLC_DOWNLOAD_VERSION}";
                 string zipFileName = $"{zipFileNameWithoutExt}.tgz";
                 string mlcUrl = $"https://www.intel.com/content/dam/develop/external/us/en/documents/{zipFileName}";
                 string tmpZipDestination = FileUtils.GetTempPath(zipFileName);
@@ -1061,6 +1065,10 @@ namespace IMLCGui
                                     string finalMLCPath = FileUtils.GetCurrentPath("mlc");
                                     if (!Directory.Exists(mlcWindowsPath))
                                     {
+                                        mlcWindowsPath = Path.Combine(extractedZipDirectory, "Windows");
+                                    }
+                                    if (!Directory.Exists(mlcWindowsPath))
+                                    {
                                         this._logger.Warn($"Failed to locate extracted directory at \"{mlcWindowsPath}\"");
                                         FileUtils.Delete(extractedZipDirectory);
                                         Dispatcher.Invoke(() =>
@@ -1089,6 +1097,7 @@ namespace IMLCGui
                                         this.WriteToConfigureLog("Success!");
 
                                         this._mlcProcessManager.Path = Path.Combine(finalMLCPath, "mlc.exe");
+                                        this._mlcProcessManager.FetchVersion();
                                         this.TxtConfigurePath.Text = this._mlcProcessManager.Path;
                                         try
                                         {
