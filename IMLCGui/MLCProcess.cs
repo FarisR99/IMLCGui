@@ -65,7 +65,12 @@ namespace IMLCGui
 
         public static string GenerateCacheArguments(string mlcVersion)
         {
-            return "--c2c_latency";
+            string mlcArguments = "--c2c_latency";
+            if ("v3.10".Equals(mlcVersion))
+            {
+                mlcArguments += " -e0";
+            }
+            return mlcArguments;
         }
 
         public static string GenerateLatencyArguments(string mlcVersion, string injectDelayOverride)
@@ -74,6 +79,10 @@ namespace IMLCGui
             if (injectDelayOverride != null)
             {
                 mlcArguments += " -d" + injectDelayOverride;
+            }
+            if ("v3.10".Equals(mlcVersion))
+            {
+                mlcArguments += " -e0";
             }
             return mlcArguments;
         }
