@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -7,6 +8,7 @@ namespace IMLCGui
     internal class MLCProcess
     {
         private static readonly string VERSION_STRING_PREFIX = "Memory Latency Checker - ";
+        private static readonly List<string> NEW_VERSIONS = new List<string> { "v3.10", "v3.11" };
 
         public static async Task<string> GetMLCVersion(string processPath)
         {
@@ -66,7 +68,7 @@ namespace IMLCGui
         public static string GenerateCacheArguments(string mlcVersion)
         {
             string mlcArguments = "--c2c_latency";
-            if ("v3.10".Equals(mlcVersion))
+            if (NEW_VERSIONS.Contains(mlcVersion))
             {
                 mlcArguments += " -e0";
             }
@@ -80,7 +82,7 @@ namespace IMLCGui
             {
                 mlcArguments += " -d" + injectDelayOverride;
             }
-            if ("v3.10".Equals(mlcVersion))
+            if (NEW_VERSIONS.Contains(mlcVersion))
             {
                 mlcArguments += " -e0";
             }
@@ -95,7 +97,7 @@ namespace IMLCGui
         public static string GenerateQuickLatencyArguments(string mlcVersion)
         {
             string mlcArguments = "--latency_matrix";
-            if ("v3.10".Equals(mlcVersion))
+            if (NEW_VERSIONS.Contains(mlcVersion))
             {
                 mlcArguments += " -e0";
             }

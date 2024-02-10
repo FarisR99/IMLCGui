@@ -41,7 +41,9 @@ namespace IMLCGui
             "20000",
         };
 
-        private static readonly string MLC_DOWNLOAD_VERSION = "v3.10";
+        // TODO: Refactor this so that there are not 2 variables to maintain
+        private static readonly string MLC_DOWNLOAD_VERSION = "v3.11";
+        private static readonly string MLC_DOWNLOAD_URL = "https://downloadmirror.intel.com/793041/mlc_v3.11.tgz";
 
         private Logger _logger;
         private CustomConfig _config;
@@ -958,7 +960,7 @@ namespace IMLCGui
             {
                 string zipFileNameWithoutExt = $"mlc_{MLC_DOWNLOAD_VERSION}";
                 string zipFileName = $"{zipFileNameWithoutExt}.tgz";
-                string mlcUrl = $"https://www.intel.com/content/dam/develop/external/us/en/documents/{zipFileName}";
+                string mlcUrl = MLC_DOWNLOAD_URL;
                 string tmpZipDestination = FileUtils.GetTempPath(zipFileName);
 
                 if (this.mlcDownloadCancellationSource != null)
