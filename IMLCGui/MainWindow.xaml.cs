@@ -42,8 +42,8 @@ namespace IMLCGui
         };
 
         // TODO: Refactor this so that there are not 2 variables to maintain
-        private static readonly string MLC_DOWNLOAD_VERSION = "v3.11";
-        private static readonly string MLC_DOWNLOAD_URL = "https://downloadmirror.intel.com/793041/mlc_v3.11.tgz";
+        private static readonly string MLC_DOWNLOAD_VERSION = "v3.11b";
+        private static readonly string MLC_DOWNLOAD_URL = "https://downloadmirror.intel.com/834254/mlc_v3.11b.tgz";
 
         private Logger _logger;
         private CustomConfig _config;

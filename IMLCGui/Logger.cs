@@ -39,12 +39,12 @@ namespace IMLCGui
 
         public void Error(Exception ex)
         {
-            Log(LogLevel.ERROR, ex.Message);
+            Log(LogLevel.ERROR, ex.ToString());
         }
 
         public void Error(string errorMessage, Exception ex)
         {
-            Log(LogLevel.ERROR, errorMessage, ex.Message);
+            Log(LogLevel.ERROR, errorMessage, ex.ToString());
         }
 
         public void Log(params string[] logMessages)
