@@ -42,8 +42,8 @@ namespace IMLCGui
         };
 
         // TODO: Refactor this so that there are not 2 variables to maintain
-        private static readonly string MLC_DOWNLOAD_VERSION = "v3.11b";
-        private static readonly string MLC_DOWNLOAD_URL = "https://downloadmirror.intel.com/834254/mlc_v3.11b.tgz";
+        private static readonly string MLC_DOWNLOAD_VERSION = "v3.12";
+        private static readonly string MLC_DOWNLOAD_URL = "https://downloadmirror.intel.com/866182/mlc_v3.12.tgz";
 
         private Logger _logger;
         private CustomConfig _config;
@@ -1032,7 +1032,7 @@ namespace IMLCGui
                             {
                                 this.mlcDownloadLastProgress = -1;
                             }
-                            if (!FileUtils.DoesExist(tmpZipDestination))
+                            if (!FileUtils.DoesExist(tmpZipDestination) || new FileInfo(tmpZipDestination).Length == 0)
                             {
                                 this._logger.Warn($"Failed to locate downloaded file at \"{tmpZipDestination}\"");
                                 Dispatcher.Invoke(() =>
