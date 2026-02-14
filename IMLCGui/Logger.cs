@@ -57,6 +57,11 @@ namespace IMLCGui
             Log(LogLevel.WARN, logMessages);
         }
 
+        public void Warn(string warningMessage, Exception ex)
+        {
+            Log(LogLevel.WARN, warningMessage, ex.ToString());
+        }
+
         public void Log(LogLevel level, params string[] logMessages)
         {
             try
@@ -100,7 +105,7 @@ namespace IMLCGui
             }
             else
             {
-                Console.WriteLine(formattedMsg);
+                Console.Out.WriteLine(formattedMsg);
             }
             if (w != null)
             {

@@ -90,28 +90,15 @@ namespace IMLCGui
 
         public void FetchVersion()
         {
-            string mlcPath = this.Path;
-            if (mlcPath == null || mlcPath.Trim().Length == 0)
+            if (this.Path == null || this.Path.Trim().Length == 0)
             {
-                // If the MLC path is not set, try to find mlc.exe in the current directory
-                mlcPath = FileUtils.GetCurrentPath("mlc.exe");
-                if (!FileUtils.DoesExist(mlcPath))
-                {
-                    // If ./mlc.exe is not found, check ./mlc/mlc.exe
-                    string mlcDir = FileUtils.GetCurrentPath("mlc");
-                    mlcPath = System.IO.Path.Combine(mlcDir, "mlc.exe");
-                }
-                if (!FileUtils.DoesExist(mlcPath))
-                {
-                    this._logger.Warn("MLC path is empty and mlc.exe was not found in the current directory, cannot fetch MLC version.");
-                    this.Version = null;
-                    return;
-                }
-                this.Path = mlcPath;
+                this._logger.Error("MLC path is empty and mlc.exe was not found in the current directory, cannot fetch MLC version.");
+                this.Version = null;
+                return;
             }
             Task.Run(async () =>
             {
-                this.Version = await MLCProcess.GetMLCVersion(mlcPath);
+                this.Version = await MLCProcess.GetMLCVersion(this.Path);
                 if (this.Version != null)
                 {
                     this.Version = this.Version.Trim();
@@ -265,6 +252,33 @@ namespace IMLCGui
                 }
             }
             return stopped;
+        }
+
+        public string ValidatePath()
+        {
+            if (this.Path != null && this.Path.Trim().Length > 0)
+            {
+                if (!FileUtils.DoesExist(this.Path))
+                {
+                    // Pre-configured mlc.exe path does not exist
+                    this.Path = null;
+                }
+                return this.Path;
+            }
+
+            // If the MLC path is not set, try to find mlc.exe in the current directory
+            string mlcPath = FileUtils.GetCurrentPath("mlc.exe");
+            if (!FileUtils.DoesExist(mlcPath))
+            {
+                // If ./mlc.exe is not found, check ./mlc/mlc.exe
+                string mlcDir = FileUtils.GetCurrentPath("mlc");
+                mlcPath = System.IO.Path.Combine(mlcDir, "mlc.exe");
+            }
+            if (!FileUtils.DoesExist(mlcPath))
+            {
+                return null;
+            }
+            return mlcPath;
         }
     }
 }

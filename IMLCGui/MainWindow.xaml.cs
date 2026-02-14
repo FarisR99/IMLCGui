@@ -62,7 +62,6 @@ namespace IMLCGui
             this.LoadConfiguration();
             this._mlcProcessManager = new MLCProcessManager(this._logger, this._config.Get("mlcPath", ""));
             this.ValidateMLC();
-            this._mlcProcessManager.FetchVersion();
             this.TxtConfigurePath.Text = this._mlcProcessManager.Path;
 
             if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
@@ -282,36 +281,42 @@ namespace IMLCGui
 
         private string ValidateMLC()
         {
-            if (this._mlcProcessManager.Path.Trim().Length == 0)
+            string validatedPath = this._mlcProcessManager.ValidatePath();
+            if (validatedPath != null && validatedPath.Equals(this._mlcProcessManager.Path))
             {
-                this._mlcProcessManager.Path = FileUtils.GetCurrentPath("mlc.exe");
-                if (File.Exists(this._mlcProcessManager.Path))
+                this._mlcProcessManager.FetchVersion();
+                return null;
+            }
+            else if (validatedPath != null)
+            {
+                this._logger.Log($"Found mlc.exe at path: {validatedPath}");
+                try
                 {
-                    try
-                    {
-                        this._logger.Log($"Found mlc.exe at: {this._mlcProcessManager.Path}");
-                        this._config.Set("mlcPath", this._mlcProcessManager.Path);
-                        this._config.Save();
-
-                        this.TxtConfigurePath.Text = this._mlcProcessManager.Path;
-                    }
-                    catch (Exception ex)
-                    {
-                        this._logger.Error("Failed to save mlcPath to config:", ex);
-                    }
-                    this._mlcProcessManager.FetchVersion();
-                    return null;
+                    this._config.Set("mlcPath", validatedPath);
+                    this._config.Save();
                 }
+                catch (Exception ex)
+                {
+                    this._logger.Error("Failed to save mlcPath to config:", ex);
+                }
+                this._mlcProcessManager.Path = validatedPath;
+                this.TxtConfigurePath.Text = validatedPath;
+
+                this._mlcProcessManager.FetchVersion();
+                return null;
             }
-            if (!File.Exists(this._mlcProcessManager.Path))
-            {
-                return $"Failed to find MLC at \"{this._mlcProcessManager.Path}\". Please visit the Configure tab.";
-            }
-            return null;
+            this._logger.Error($"Failed to find MLC at: \"{this._mlcProcessManager.Path}\"");
+            return $"Failed to find MLC at \"{this._mlcProcessManager.Path}\". Please visit the Configure tab.";
         }
 
         private void HandleMLCButton(Action resetUI, string logMessage, Action taskAction)
         {
+            string validationResult = ValidateMLC();
+            if (validationResult != null)
+            {
+                this.ShowMessageAsync("Error", validationResult);
+                return;
+            }
             if (this._mlcProcessManager.GetVersion() == null)
             {
                 this.ShowMessageAsync("Error", "Could not fetch MLC version.");
@@ -324,12 +329,6 @@ namespace IMLCGui
                     this.runningTest = false;
                     return;
                 }
-            }
-            string validationResult = ValidateMLC();
-            if (validationResult != null)
-            {
-                this.ShowMessageAsync("Error", validationResult);
-                return;
             }
 
             this.runningTest = true;
