@@ -8,7 +8,7 @@ namespace IMLCGui
     internal class MLCProcess
     {
         private static readonly string VERSION_STRING_PREFIX = "Memory Latency Checker - ";
-        private static readonly List<string> NEW_VERSIONS = new List<string> { "v3.10", "v3.11", "v3.11b" };
+        private static readonly List<string> NEW_VERSIONS = new List<string> { "v3.10", "v3.11", "v3.11b", "v3.12" };
 
         public static async Task<string> GetMLCVersion(string processPath)
         {
